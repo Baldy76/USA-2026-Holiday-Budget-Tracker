@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holiday Budget Tracker v1.4.0</title>
+    <title>Holiday Budget Tracker v1.4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4338ca">
@@ -18,8 +18,8 @@
     <header class="bg-indigo-700 text-white p-6 shadow-md sticky top-0 z-20">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold">USA Trip Tracker <span class="text-xs font-normal opacity-50">v1.4.0</span></h1>
-                <p id="live-rate" class="text-xs opacity-70 italic">Syncing rates...</p>
+                <h1 class="text-xl font-bold">USA Trip Tracker <span class="text-xs font-normal opacity-50">v1.4.1</span></h1>
+                <p id="live-rate" class="text-xs opacity-70 italic">Connecting to ExchangeRate-API...</p>
             </div>
             <div class="text-right">
                 <span class="text-xs uppercase tracking-widest opacity-80">Live Rate</span>
@@ -34,7 +34,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">Trip Bankroll</h2>
-                    <p class="text-xs text-slate-500">Total funds available in GBP</p>
+                    <p class="text-xs text-slate-500">Total funds available in GBP (£)</p>
                 </div>
                 <div class="relative w-full md:w-64">
                     <span class="absolute left-4 top-3 text-slate-400 font-bold">£</span>
@@ -79,9 +79,9 @@
 
     <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-60"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden">
             <div class="modal-content py-6 text-left px-8">
-                <h3 class="text-xl font-bold text-slate-800 mb-6" id="modal-title">Edit Day</h3>
+                <h3 class="text-xl font-bold text-slate-800 mb-6" id="modal-title">Edit Entry</h3>
                 
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date/Label</label>
@@ -94,7 +94,7 @@
                 </div>
                 
                 <div class="mb-8">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Budget ($)</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Daily Budget ($)</label>
                     <div class="relative">
                         <span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
                         <input type="number" id="edit-usd" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-7 focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -102,8 +102,8 @@
                 </div>
 
                 <div class="flex flex-col gap-3">
-                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Save Changes</button>
-                    <button onclick="deleteDay()" id="delete-btn" class="w-full py-2 text-red-500 text-xs font-bold uppercase tracking-widest">Delete Day</button>
+                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition-all">Save Changes</button>
+                    <button onclick="deleteDay()" id="delete-btn" class="w-full py-2 text-red-500 text-xs font-bold uppercase tracking-widest">Delete Entry</button>
                     <button onclick="toggleModal()" class="w-full py-2 text-slate-400 text-sm font-semibold italic text-center">Cancel</button>
                 </div>
             </div>
@@ -111,12 +111,13 @@
     </div>
 
     <script>
+        // SOURCE: Using ExchangeRate-API (exchangerate-api.com)
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
-        let exchangeRate = 1.30; 
+        let exchangeRate = 1.30; // Global fallback
         let editingIndex = null;
         let globalLimitGbp = localStorage.getItem('holidayLimitGbp') || 5000;
 
-        // FULL DATA FROM YOUR IMAGE
+        // Trip Dataset
         const defaultData = [
             { day: "Mon 20-Jul", activity: "Pizza", usd: 50 },
             { day: "Tue 21-Jul", activity: "Disneyland: Breakfast, Lunch, Dinner, Spends", usd: 500 },
@@ -139,18 +140,24 @@
             { day: "Fri 07-Aug", activity: "Flight Home", usd: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.4')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.4.1')) || defaultData;
 
         async function fetchRates() {
             try {
                 const res = await fetch(API_URL);
+                if(!res.ok) throw new Error("API Limit reached");
                 const data = await res.json();
                 exchangeRate = data.rates.USD;
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
                 document.getElementById('live-rate').innerText = "Live: £1 = $" + exchangeRate.toFixed(2);
                 document.getElementById('global-limit').value = globalLimitGbp;
                 render();
-            } catch (e) { render(); }
+            } catch (e) {
+                console.error("Currency fetch failed:", e);
+                document.getElementById('live-rate').innerText = "Offline Mode: Using standard fallback (1.30)";
+                document.getElementById('usd-rate').innerText = "1.30";
+                render();
+            }
         }
 
         function updateGlobalBudget(val) {
@@ -171,13 +178,13 @@
                     <div>
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">${item.day}</span>
-                            <button onclick="openEdit(${index})" class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded-lg font-bold uppercase">Edit</button>
+                            <button onclick="openEdit(${index})" class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded-lg font-bold uppercase tracking-wider">Edit</button>
                         </div>
-                        <p class="text-xs text-slate-600 leading-relaxed line-clamp-4">${item.activity}</p>
+                        <p class="text-xs text-slate-600 leading-relaxed overflow-hidden line-clamp-4">${item.activity}</p>
                     </div>
                     <div class="mt-4">
                         <p class="text-2xl font-black text-slate-800">$${item.usd.toFixed(2)}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Est: £${gbpCost}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cost: £${gbpCost}</p>
                     </div>
                 </div>`;
             }).join('');
@@ -187,9 +194,9 @@
             const spentPercent = (totalUsd / limitUsd) * 100;
             
             document.getElementById('goal-usd').innerText = `$${limitUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-            document.getElementById('goal-gbp-sub').innerText = `LIMIT: £${parseFloat(globalLimitGbp).toLocaleString()}`;
+            document.getElementById('goal-gbp-sub').innerText = `BANKROLL: £${parseFloat(globalLimitGbp).toLocaleString()}`;
             document.getElementById('total-usd').innerText = `$${totalUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('planned-gbp-sub').innerText = `TOTAL: £${(totalUsd / exchangeRate).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            document.getElementById('planned-gbp-sub').innerText = `TOTAL COST: £${(totalUsd / exchangeRate).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
             document.getElementById('remaining-usd').innerText = `$${Math.abs(remainingUsd).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('budget-progress').style.width = `${Math.min(spentPercent, 100)}%`;
 
@@ -206,12 +213,12 @@
                 forecastLabel.className = "text-[10px] font-bold uppercase mt-1 text-green-500";
             }
             
-            localStorage.setItem('holidayBudget_v1.4', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v1.4.1', JSON.stringify(tripData));
         }
 
         function openEdit(index) {
             editingIndex = index;
-            document.getElementById('modal-title').innerText = "Edit " + tripData[index].day;
+            document.getElementById('modal-title').innerText = "Edit Entry";
             document.getElementById('edit-day').value = tripData[index].day;
             document.getElementById('edit-activity').value = tripData[index].activity;
             document.getElementById('edit-usd').value = tripData[index].usd;
@@ -247,7 +254,7 @@
         }
 
         function deleteDay() {
-            if(confirm("Remove this day?")) {
+            if(confirm("Permanently delete this entry?")) {
                 tripData.splice(editingIndex, 1);
                 toggleModal();
                 render();
