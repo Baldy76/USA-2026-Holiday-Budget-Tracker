@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Budget Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-gray-100 font-sans">
 
+    <header class="bg-blue-600 text-white p-6 shadow-lg sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Holiday Tracker</h1>
+            <div class="text-right">
+                <p id="live-rate" class="text-sm opacity-80">Fetching live rate...</p>
+                <p class="text-xl font-mono">£1 = <span id="usd-rate">--</span> USD</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4">
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                <p class="text-gray-500 uppercase text-xs font-bold">Total Budget (USD)</p>
+                <h2 id="total-usd" class="text-3xl font-bold">$0.00</h2>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-gray-500 uppercase text-xs font-bold">Current Cost (GBP)</p>
+                <h2 id="total-gbp" class="text-3xl font-bold">£0.00</h2>
+            </div>
+        </section>
+
+        <div id="budget-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+            </div>
+    </main>
+
+    <script>
+        // Use a 2026-reliable public API for conversion
+        const API_URL = "https://open.er-api.com/v6/latest/GBP";
+        let exchangeRate = 1.35; // Fallback
+
+        async function updateExchangeRate() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                exchangeRate = data.rates.USD;
+                document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
+                document.getElementById('live-rate').innerText = "Live Rate Updated: " + new Date().toLocaleTimeString();
+                calculateTotals();
+            } catch (error) {
+                console.error("Rate fetch failed", error);
+            }
+        }
+
+        // Dummy data based on your image
+        const tripData = [
+            { day: "Mon 20-Jul", activity: "Pizza", usd: 50 },
+            { day: "Tue 21-Jul", activity: "Disneyland: B/L/D", usd: 500 },
+            { day: "Wed 22-Jul", activity: "San Diego: L/D", usd: 400 },
+            { day: "Thu 23-Jul", activity: "LA: L/D", usd: 400 },
+            { day: "Fri 24-Jul", activity: "Travel to Utah", usd: 500 },
+            { day: "Sat 25-Jul", activity: "Utah: Dinner", usd: 250 },
+            { day: "Sun 26-Jul", activity: "Utah: Dinner", usd: 250 },
+        ];
+
+        function renderGrid() {
+            const grid = document.getElementById('budget-grid');
+            grid.innerHTML = tripData.map(item => `
+                <div class="bg-white p-4 rounded shadow-sm border border-gray-200 flex flex-col justify-between min-h-[150px]">
+                    <div>
+                        <p class="font-bold text-sm border-b pb-1 mb-2">${item.day}</p>
+                        <p class="text-xs text-gray-600 leading-tight">${item.activity}</p>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-lg font-bold text-blue-700">$${item.usd.toFixed(2)}</p>
+                        <p class="text-xs text-gray-400">≈ £${(item.usd / exchangeRate).toFixed(2)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateTotals() {
+            const totalUsd = tripData.reduce((sum, item) => sum + item.usd, 0);
+            document.getElementById('total-usd').innerText = `$${totalUsd.toLocaleString()}`;
+            document.getElementById('total-gbp').innerText = `£${(totalUsd / exchangeRate).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            renderGrid();
+        }
+
+        updateExchangeRate();
+    </script>
+</body>
+</html>
