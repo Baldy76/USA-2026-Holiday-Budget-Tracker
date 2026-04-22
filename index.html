@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holiday Budget Tracker v1.5.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Holiday Budget Tracker v1.6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4338ca">
@@ -11,111 +11,114 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow: hidden; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .safe-bottom { padding-bottom: 90px; }
+        .active-tab { color: #4338ca; border-top: 3px solid #4338ca; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 no-scrollbar">
 
-    <header class="bg-indigo-700 text-white p-6 shadow-md sticky top-0 z-20">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold">USA Trip Tracker <span class="text-xs font-normal opacity-50">v1.5.0</span></h1>
-                <p id="live-rate" class="text-xs opacity-70 italic">Syncing rates...</p>
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto p-4">
+            <div class="flex justify-between items-center mb-3">
+                <h1 class="text-lg font-bold">USA 2026 <span id="view-title" class="text-indigo-200 text-xs ml-2 uppercase tracking-widest">Home</span></h1>
+                <div class="text-right">
+                    <p class="text-[10px] opacity-70 leading-none">LIVE RATE</p>
+                    <p class="text-sm font-mono font-bold">£1 = $<span id="usd-rate">--</span></p>
+                </div>
             </div>
-            <div class="text-right">
-                <span class="text-xs uppercase tracking-widest opacity-80 font-bold">£1 = $<span id="usd-rate">--</span></span>
-                <p class="text-xs opacity-60">Source: ExchangeRate-API</p>
+            
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-white/10 rounded-xl p-2 text-center">
+                    <p class="text-[8px] uppercase opacity-70">Goal</p>
+                    <p id="stat-goal" class="text-sm font-bold">$0</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-2 text-center">
+                    <p class="text-[8px] uppercase opacity-70">Spent</p>
+                    <p id="stat-spent" class="text-sm font-bold text-orange-300">$0</p>
+                </div>
+                <div id="stat-remain-bg" class="bg-white/20 rounded-xl p-2 text-center">
+                    <p class="text-[8px] uppercase opacity-70">Left</p>
+                    <p id="stat-remain" class="text-sm font-bold">$0</p>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-4 pb-24">
+    <main class="max-w-7xl mx-auto p-4 safe-bottom">
         
-        <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Trip Bankroll</h2>
-                    <p class="text-xs text-slate-500">Total available funds in GBP (£)</p>
-                </div>
-                <div class="relative w-full md:w-64">
-                    <span class="absolute left-4 top-3 text-slate-400 font-bold">£</span>
-                    <input type="number" id="global-limit" 
-                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 pl-8 font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500 outline-none"
-                           onchange="updateGlobalBudget(this.value)">
-                </div>
+        <div id="tab-content" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </div>
-        </section>
 
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Bankroll ($)</p>
-                <h2 id="goal-usd" class="text-xl font-black text-slate-700">$0.00</h2>
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Planned ($)</p>
-                <h2 id="total-planned-usd" class="text-xl font-black text-indigo-500">$0.00</h2>
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Actual Spent ($)</p>
-                <h2 id="total-actual-usd" class="text-xl font-black text-orange-600">$0.00</h2>
-            </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-b-4" id="status-card">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Remaining Bankroll</p>
-                <h2 id="remaining-usd" class="text-xl font-black text-slate-800">$0.00</h2>
-                <p id="forecast-label" class="text-[10px] font-bold uppercase mt-1">--</p>
-            </div>
-        </section>
-
-        <div class="mb-8">
-            <div class="flex justify-between mb-1">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Burn Rate (Actual vs Planned)</span>
-                <span id="progress-percent" class="text-[10px] font-bold text-slate-400 uppercase">0%</span>
-            </div>
-            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                <div id="budget-progress" class="bg-indigo-600 h-full transition-all duration-700" style="width: 0%"></div>
-            </div>
+        <div id="admin-panel" class="hidden space-y-6">
+            <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-2">Master Admin</h2>
+                <p class="text-xs text-slate-500 mb-6">Input your total trip funds in GBP (£) to calculate your USD ($) spending power.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Trip Bankroll (£)</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-3.5 text-slate-400 font-bold">£</span>
+                            <input type="number" id="input-gbp-limit" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 pl-10 font-black text-indigo-600 text-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="5000">
+                        </div>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase">Calculated Bankroll (USD)</p>
+                        <h3 id="calc-usd-limit" class="text-2xl font-black text-indigo-700">$0.00</h3>
+                        <p class="text-[10px] italic text-indigo-400 mt-1">Based on current rate: £1 = $<span class="current-rate-text">--</span></p>
+                    </div>
+                    <button onclick="saveAdminSettings()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition-all">Update Trip Limit</button>
+                </div>
+            </section>
         </div>
 
-        <div id="budget-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-            </div>
-
-        <div class="mt-8 flex justify-center">
-            <button onclick="addNewDay()" class="px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg flex items-center gap-2 hover:bg-indigo-700 active:scale-95 transition-all">
-                <span>+</span> Add Another Day
-            </button>
-        </div>
     </main>
 
-    <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-60"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50">
-            <div class="modal-content py-6 text-left px-8">
-                <h3 class="text-xl font-bold text-slate-800 mb-6" id="modal-title">Edit Entry</h3>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-40 px-2">
+        <div class="max-w-6xl mx-auto flex justify-between">
+            <button onclick="switchTab('LA')" id="nav-LA" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-400 transition-all">
+                <span class="text-[10px] font-bold uppercase tracking-tighter">LA</span>
+            </button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-400 transition-all">
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Utah</span>
+            </button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-400 transition-all">
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+            </button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-400 transition-all">
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Vegas</span>
+            </button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-400 transition-all">
+                <span class="text-[10px] font-bold uppercase tracking-tighter">Admin</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 p-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/60"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold" id="modal-title">Edit Day</h3>
+                    <button onclick="toggleModal()" class="text-slate-300 hover:text-slate-500 text-2xl">✕</button>
+                </div>
                 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-                        <input type="text" id="edit-day" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Budget ($)</label>
+                            <input type="number" id="edit-usd" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-indigo-500 uppercase mb-1">Spent ($)</label>
+                            <input type="number" id="edit-spent" class="w-full bg-indigo-50 border border-indigo-200 rounded-xl p-3 font-black text-indigo-700 outline-none">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Budget ($)</label>
-                        <input type="number" id="edit-usd" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Activity Info</label>
+                        <textarea id="edit-activity" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none" rows="2"></textarea>
                     </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-indigo-600 uppercase mb-1">ACTUAL SPENT TODAY ($)</label>
-                    <input type="number" id="edit-spent" step="0.01" class="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none font-black text-lg text-indigo-700" placeholder="0.00">
-                </div>
-
-                <div class="mb-8">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Activities</label>
-                    <textarea id="edit-activity" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" rows="2"></textarea>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Save & Sync</button>
-                    <button onclick="deleteDay()" id="delete-btn" class="w-full py-2 text-red-400 text-[10px] font-bold uppercase">Delete Entry</button>
-                    <button onclick="toggleModal()" class="w-full py-2 text-slate-400 text-sm font-semibold italic text-center">Close</button>
+                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg mt-4">Save Entry</button>
                 </div>
             </div>
         </div>
@@ -123,166 +126,142 @@
 
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
-        let exchangeRate = 1.30; 
+        let exchangeRate = 1.35; 
+        let currentTab = localStorage.getItem('activeTab_v1.6') || 'Home';
         let editingIndex = null;
-        let globalLimitGbp = localStorage.getItem('holidayLimitGbp') || 5000;
+        let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
 
+        // Dataset with Locations Added
         const defaultData = [
-            { day: "Mon 20-Jul", activity: "Pizza", usd: 50, spent: 0 },
-            { day: "Tue 21-Jul", activity: "Disneyland", usd: 500, spent: 0 },
-            { day: "Wed 22-Jul", activity: "San Diego", usd: 400, spent: 0 },
-            { day: "Thu 23-Jul", activity: "LA: Lunch/Dinner", usd: 400, spent: 0 },
-            { day: "Fri 24-Jul", activity: "Travel to Utah", usd: 500, spent: 0 },
-            { day: "Sat 25-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
-            { day: "Sun 26-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
-            { day: "Mon 27-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
-            { day: "Tue 28-Jul", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
-            { day: "Wed 29-Jul", activity: "Utah (SLC)", usd: 500, spent: 0 },
-            { day: "Thu 30-Jul", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
-            { day: "Fri 31-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
-            { day: "Sat 01-Aug", activity: "Travel to Vegas", usd: 500, spent: 0 },
-            { day: "Sun 02-Aug", activity: "Vegas Shopping", usd: 1000, spent: 0 },
-            { day: "Mon 03-Aug", activity: "Vegas L/D", usd: 300, spent: 0 },
-            { day: "Tue 04-Aug", activity: "Vegas Dinner", usd: 200, spent: 0 },
-            { day: "Wed 05-Aug", activity: "Vegas L/D", usd: 500, spent: 0 },
-            { day: "Thu 06-Aug", activity: "Vegas L/D", usd: 200, spent: 0 },
-            { day: "Fri 07-Aug", activity: "Flight Home", usd: 0, spent: 0 }
+            { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", usd: 50, spent: 0 },
+            { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", usd: 500, spent: 0 },
+            { day: "Wed 22-Jul", loc: "LA", activity: "San Diego", usd: 400, spent: 0 },
+            { day: "Thu 23-Jul", loc: "LA", activity: "LA: Lunch/Dinner", usd: 400, spent: 0 },
+            { day: "Fri 24-Jul", loc: "Utah", activity: "Travel to Utah", usd: 500, spent: 0 },
+            { day: "Sat 25-Jul", loc: "Utah", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Sun 26-Jul", loc: "Utah", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Mon 27-Jul", loc: "Utah", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Tue 28-Jul", loc: "Utah", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
+            { day: "Wed 29-Jul", loc: "Utah", activity: "Utah (SLC)", usd: 500, spent: 0 },
+            { day: "Thu 30-Jul", loc: "Utah", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
+            { day: "Fri 31-Jul", loc: "Utah", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Sat 01-Aug", loc: "Vegas", activity: "Travel to Vegas", usd: 500, spent: 0 },
+            { day: "Sun 02-Aug", loc: "Vegas", activity: "Vegas Shopping", usd: 1000, spent: 0 },
+            { day: "Mon 03-Aug", loc: "Vegas", activity: "Vegas L/D", usd: 300, spent: 0 },
+            { day: "Tue 04-Aug", loc: "Vegas", activity: "Vegas Dinner", usd: 200, spent: 0 },
+            { day: "Wed 05-Aug", loc: "Vegas", activity: "Vegas L/D", usd: 500, spent: 0 },
+            { day: "Thu 06-Aug", loc: "Vegas", activity: "Vegas L/D", usd: 200, spent: 0 },
+            { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.5')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.6')) || defaultData;
 
-        async function fetchRates() {
+        async function init() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 exchangeRate = data.rates.USD;
+                document.querySelectorAll('.current-rate-text').forEach(el => el.innerText = exchangeRate.toFixed(2));
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
-                document.getElementById('live-rate').innerText = "Rates Live: " + new Date().toLocaleTimeString();
-                document.getElementById('global-limit').value = globalLimitGbp;
-                render();
-            } catch (e) { render(); }
-        }
-
-        function updateGlobalBudget(val) {
-            globalLimitGbp = parseFloat(val) || 0;
-            localStorage.setItem('holidayLimitGbp', globalLimitGbp);
-            render();
-        }
-
-        function render() {
-            const grid = document.getElementById('budget-grid');
-            let totalPlannedUsd = 0;
-            let totalActualUsd = 0;
+            } catch (e) { console.log("Offline Fallback"); }
             
-            grid.innerHTML = tripData.map((item, index) => {
-                totalPlannedUsd += parseFloat(item.usd || 0);
-                totalActualUsd += parseFloat(item.spent || 0);
-                
-                const variance = item.usd - item.spent;
-                const statusColor = item.spent === 0 ? 'slate-100' : (variance >= 0 ? 'green-50' : 'red-50');
-                const varianceText = variance >= 0 ? `+$${variance.toFixed(0)}` : `-$${Math.abs(variance).toFixed(0)}`;
-                const varianceColor = variance >= 0 ? 'text-green-600' : 'text-red-600';
+            document.getElementById('input-gbp-limit').value = bankrollGbp;
+            switchTab(currentTab);
+        }
 
+        function switchTab(tabName) {
+            currentTab = tabName;
+            localStorage.setItem('activeTab_v1.6', tabName);
+            
+            // UI Toggle
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-tab'));
+            document.getElementById(`nav-${tabName}`).classList.add('active-tab');
+            document.getElementById('view-title').innerText = tabName;
+
+            if(tabName === 'Admin') {
+                document.getElementById('tab-content').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('tab-content').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+                renderGrid(tabName);
+            }
+            updateStats();
+        }
+
+        function renderGrid(filter) {
+            const grid = document.getElementById('tab-content');
+            const data = filter === 'Home' ? tripData : tripData.filter(d => d.loc === filter);
+            
+            grid.innerHTML = data.map((item) => {
+                const globalIndex = tripData.findIndex(d => d.day === item.day);
+                const variance = item.usd - item.spent;
+                const vColor = variance >= 0 ? 'text-green-600' : 'text-red-600';
+                
                 return `
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-${statusColor} flex flex-col justify-between h-64 transition-all">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">${item.day}</span>
-                            <button onclick="openEdit(${index})" class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded-lg font-bold uppercase">Update</button>
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[9px] font-black text-indigo-400 uppercase tracking-tighter">${item.day}</span>
+                        <button onclick="openEdit(${globalIndex})" class="bg-indigo-50 text-indigo-600 text-[9px] px-2 py-1 rounded-lg font-bold uppercase">Update</button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 line-clamp-2 mt-1 mb-2">${item.activity}</p>
+                    <div class="grid grid-cols-2 border-t pt-3 gap-2">
+                        <div>
+                            <p class="text-[8px] font-bold text-slate-400 uppercase">Budget</p>
+                            <p class="text-sm font-bold">$${item.usd}</p>
                         </div>
-                        <p class="text-[10px] text-slate-400 line-clamp-2 italic mb-2">${item.activity}</p>
-                        
-                        <div class="flex justify-between items-end border-b pb-2 mb-2">
-                            <div>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Planned</p>
-                                <p class="text-sm font-bold text-slate-700">$${item.usd.toFixed(0)}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Spent</p>
-                                <p class="text-sm font-black text-indigo-600">$${(item.spent || 0).toFixed(0)}</p>
-                            </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-bold text-slate-400 uppercase">Spent</p>
+                            <p class="text-sm font-black text-indigo-600">$${item.spent}</p>
                         </div>
                     </div>
-                    <div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Variance</span>
-                            <span class="text-xs font-black ${varianceColor}">${varianceText}</span>
-                        </div>
-                        <p class="text-[9px] text-slate-300 font-bold uppercase mt-1">Cost: £${(item.spent / exchangeRate).toFixed(2)}</p>
+                    <div class="flex justify-between mt-2 items-center">
+                         <span class="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Diff</span>
+                         <span class="text-[10px] font-black ${vColor}">${variance >= 0 ? '+' : ''}${variance}</span>
                     </div>
                 </div>`;
             }).join('');
+        }
 
-            const limitUsd = globalLimitGbp * exchangeRate;
+        function updateStats() {
+            const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+            const limitUsd = bankrollGbp * exchangeRate;
             const remainingUsd = limitUsd - totalActualUsd;
-            const spentPercent = (totalActualUsd / totalPlannedUsd) * 100;
-            
-            document.getElementById('goal-usd').innerText = `$${limitUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-            document.getElementById('total-planned-usd').innerText = `$${totalPlannedUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-            document.getElementById('total-actual-usd').innerText = `$${totalActualUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-            document.getElementById('remaining-usd').innerText = `$${remainingUsd.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-            document.getElementById('progress-percent').innerText = `${Math.round(spentPercent || 0)}%`;
-            document.getElementById('budget-progress').style.width = `${Math.min(spentPercent || 0, 100)}%`;
 
-            const statusCard = document.getElementById('status-card');
-            const forecastLabel = document.getElementById('forecast-label');
+            document.getElementById('stat-goal').innerText = `$${Math.round(limitUsd)}`;
+            document.getElementById('stat-spent').innerText = `$${Math.round(totalActualUsd)}`;
+            document.getElementById('stat-remain').innerText = `$${Math.round(remainingUsd)}`;
+            document.getElementById('calc-usd-limit').innerText = `$${limitUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
-            if (remainingUsd < 0) {
-                statusCard.className = "bg-white p-5 rounded-2xl shadow-sm border border-red-500 border-b-4";
-                forecastLabel.innerText = "OUT OF MONEY";
-                forecastLabel.className = "text-[10px] font-bold uppercase mt-1 text-red-500";
-            } else {
-                statusCard.className = "bg-white p-5 rounded-2xl shadow-sm border border-green-500 border-b-4";
-                forecastLabel.innerText = "BUDGET HEALTHY";
-                forecastLabel.className = "text-[10px] font-bold uppercase mt-1 text-green-500";
-            }
-            
-            localStorage.setItem('holidayBudget_v1.5', JSON.stringify(tripData));
+            const remainBg = document.getElementById('stat-remain-bg');
+            if(remainingUsd < 0) { remainBg.className = "bg-red-500 rounded-xl p-2 text-center"; }
+            else { remainBg.className = "bg-green-500/20 rounded-xl p-2 text-center"; }
+        }
+
+        function saveAdminSettings() {
+            bankrollGbp = document.getElementById('input-gbp-limit').value;
+            localStorage.setItem('bankrollGbp', bankrollGbp);
+            updateStats();
+            alert("Settings Saved!");
         }
 
         function openEdit(index) {
             editingIndex = index;
-            document.getElementById('modal-title').innerText = "Update " + tripData[index].day;
-            document.getElementById('edit-day').value = tripData[index].day;
-            document.getElementById('edit-activity').value = tripData[index].activity;
-            document.getElementById('edit-usd').value = tripData[index].usd;
-            document.getElementById('edit-spent').value = tripData[index].spent || 0;
-            document.getElementById('delete-btn').classList.remove('hidden');
-            toggleModal();
-        }
-
-        function addNewDay() {
-            editingIndex = tripData.length;
-            document.getElementById('modal-title').innerText = "Add Trip Entry";
-            document.getElementById('edit-day').value = "";
-            document.getElementById('edit-activity').value = "";
-            document.getElementById('edit-usd').value = "0";
-            document.getElementById('edit-spent').value = "0";
-            document.getElementById('delete-btn').classList.add('hidden');
+            const item = tripData[index];
+            document.getElementById('modal-title').innerText = item.day;
+            document.getElementById('edit-usd').value = item.usd;
+            document.getElementById('edit-spent').value = item.spent;
+            document.getElementById('edit-activity').value = item.activity;
             toggleModal();
         }
 
         function saveChanges() {
-            const entry = {
-                day: document.getElementById('edit-day').value || "Day",
-                activity: document.getElementById('edit-activity').value || "",
-                usd: parseFloat(document.getElementById('edit-usd').value) || 0,
-                spent: parseFloat(document.getElementById('edit-spent').value) || 0
-            };
-            
-            if (editingIndex === tripData.length) tripData.push(entry);
-            else tripData[editingIndex] = entry;
-            
+            tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
+            tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
+            tripData[editingIndex].activity = document.getElementById('edit-activity').value;
+            localStorage.setItem('holidayBudget_v1.6', JSON.stringify(tripData));
             toggleModal();
-            render();
-        }
-
-        function deleteDay() {
-            if(confirm("Remove entry?")) {
-                tripData.splice(editingIndex, 1);
-                toggleModal();
-                render();
-            }
+            switchTab(currentTab);
         }
 
         function toggleModal() {
@@ -291,8 +270,7 @@
             document.body.classList.toggle('modal-active');
         }
 
-        fetchRates();
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+        init();
     </script>
 </body>
 </html>
