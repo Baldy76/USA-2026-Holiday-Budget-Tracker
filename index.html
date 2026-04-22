@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>USA Trip Tracker v1.7.0</title>
+    <title>USA Trip Tracker v1.8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -12,54 +12,69 @@
 <body class="bg-slate-50 font-sans text-slate-900 no-scrollbar">
 
     <header class="glass-header sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto p-4">
-            <div class="flex justify-between items-center mb-3">
-                <h1 class="text-lg font-bold text-white">USA 2026 <span id="view-title" class="text-indigo-200 text-xs ml-2 uppercase tracking-widest">Home</span></h1>
-                <div class="text-right text-white">
-                    <p class="text-[8px] opacity-70 leading-none font-bold">LIVE RATE</p>
-                    <p class="text-sm font-mono font-bold">£1 = $<span id="usd-rate">--</span></p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-2">
-                <div class="stat-pill">
-                    <p class="pill-label">Goal</p>
-                    <p id="stat-goal" class="pill-value">$0</p>
-                </div>
-                <div class="stat-pill">
-                    <p class="pill-label">Spent</p>
-                    <p id="stat-spent" class="pill-value text-orange-300">$0</p>
-                </div>
-                <div id="stat-remain-bg" class="stat-pill accent">
-                    <p class="pill-label">Left</p>
-                    <p id="stat-remain" class="pill-value">$0</p>
-                </div>
+        <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-white uppercase tracking-tighter">USA '26 <span id="view-title" class="text-indigo-200 text-xs ml-2 font-normal">Home</span></h1>
+            <div class="text-right text-white">
+                <p class="text-[8px] opacity-70 font-bold uppercase">Exchange Rate</p>
+                <p class="text-sm font-mono font-bold">£1 = $<span id="usd-rate">1.35</span></p>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 safe-bottom">
-        <div id="tab-content" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        
+        <div id="dashboard-view" class="space-y-4">
+            <section class="dash-card">
+                <p class="dash-label">Trip Bankroll</p>
+                <div class="flex justify-between items-baseline">
+                    <h2 id="dash-goal-usd" class="text-3xl font-black text-slate-800">$0</h2>
+                    <h3 id="dash-goal-gbp" class="text-xl font-bold text-slate-400">£0</h3>
+                </div>
+            </section>
+
+            <section class="dash-card border-l-4 border-orange-500">
+                <p class="dash-label">Total Actual Spent</p>
+                <div class="flex justify-between items-baseline">
+                    <h2 id="dash-spent-usd" class="text-3xl font-black text-orange-600">$0</h2>
+                    <h3 id="dash-spent-gbp" class="text-xl font-bold text-slate-400">£0</h3>
+                </div>
+            </section>
+
+            <section id="dash-remain-card" class="dash-card border-l-4 border-green-500">
+                <p class="dash-label">Balance Remaining</p>
+                <div class="flex justify-between items-baseline">
+                    <h2 id="dash-remain-usd" class="text-3xl font-black text-green-600">$0</h2>
+                    <h3 id="dash-remain-gbp" class="text-xl font-bold text-slate-400">£0</h3>
+                </div>
+            </section>
+
+            <div class="bg-indigo-900/5 p-6 rounded-[32px] border border-indigo-100">
+                <div class="flex justify-between mb-2">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase">Trip Budget Burn</span>
+                    <span id="burn-percent" class="text-[10px] font-bold text-indigo-600 uppercase">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                    <div id="burn-progress" class="bg-indigo-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
         <div id="admin-panel" class="hidden space-y-6">
             <section class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800 mb-1">Master Admin</h2>
-                <p class="text-xs text-slate-500 mb-6 font-medium">Define your master budget in ££.</p>
+                <h2 class="text-lg font-bold text-slate-800 mb-1">Master Budget Settings</h2>
+                <p class="text-xs text-slate-500 mb-6 font-medium">Set your hard limit in GBP.</p>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Trip Bankroll (£)</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Total Trip Funds (£)</label>
                         <div class="relative">
                             <span class="absolute left-4 top-3.5 text-slate-300 font-bold">£</span>
                             <input type="number" id="input-gbp-limit" class="admin-input" placeholder="5000">
                         </div>
                     </div>
-                    <div class="bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
-                        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Calculated Bankroll (USD)</p>
-                        <h3 id="calc-usd-limit" class="text-3xl font-black text-indigo-700">$0.00</h3>
-                        <p class="text-[9px] font-bold text-indigo-300 mt-1 uppercase">Rate Used: £1 = $<span class="current-rate-text">--</span></p>
-                    </div>
-                    <button onclick="saveAdminSettings()" class="btn-primary">Update Trip Limit</button>
+                    <button onclick="saveAdminSettings()" class="btn-primary">Sync All Data</button>
                 </div>
             </section>
         </div>
@@ -67,21 +82,11 @@
 
     <nav class="bottom-nav">
         <div class="max-w-6xl mx-auto flex justify-around items-center h-full">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-item">
-                <span class="nav-text">LA</span>
-            </button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-item">
-                <span class="nav-text">Utah</span>
-            </button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-item">
-                <div class="home-circle">H</div>
-            </button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-item">
-                <span class="nav-text">Vegas</span>
-            </button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-item">
-                <span class="nav-text">Admin</span>
-            </button>
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-item"><span class="nav-text">LA</span></button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-item"><span class="nav-text">Utah</span></button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-item"><div class="home-circle">🏠</div></button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-item"><span class="nav-text">Vegas</span></button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-item"><span class="nav-text">Admin</span></button>
         </div>
     </nav>
 
@@ -90,25 +95,25 @@
         <div class="modal-container bg-white w-full max-w-md rounded-[40px] shadow-2xl z-50 overflow-hidden border border-white">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold" id="modal-title">Edit Day</h3>
+                    <h3 class="text-xl font-bold" id="modal-title">Update Day</h3>
                     <button onclick="toggleModal()" class="text-slate-300 hover:text-slate-500 text-2xl">✕</button>
                 </div>
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="modal-field-group">
-                            <label class="modal-label">Budget ($)</label>
+                            <label class="modal-label">Planned ($)</label>
                             <input type="number" id="edit-usd" class="modal-input">
                         </div>
                         <div class="modal-field-group">
-                            <label class="modal-label text-indigo-500">Spent ($)</label>
+                            <label class="modal-label text-indigo-500">Actual Spent ($)</label>
                             <input type="number" id="edit-spent" class="modal-input accent">
                         </div>
                     </div>
                     <div class="modal-field-group">
-                        <label class="modal-label">Activity Info</label>
+                        <label class="modal-label">Activity Notes</label>
                         <textarea id="edit-activity" class="modal-input text-sm" rows="2"></textarea>
                     </div>
-                    <button onclick="saveChanges()" class="btn-primary mt-4">Save Entry</button>
+                    <button onclick="saveChanges()" class="btn-primary mt-4">Confirm & Update</button>
                 </div>
             </div>
         </div>
@@ -117,9 +122,9 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v1.7') || 'Home';
-        let editingIndex = null;
+        let currentTab = localStorage.getItem('activeTab_v1.8') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
+        let editingIndex = null;
 
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", usd: 50, spent: 0 },
@@ -143,40 +148,74 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.7')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.8')) || defaultData;
 
         async function init() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 exchangeRate = data.rates.USD;
-                document.querySelectorAll('.current-rate-text').forEach(el => el.innerText = exchangeRate.toFixed(2));
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
-            } catch (e) { console.warn("Using offline fallback"); }
+            } catch (e) { console.warn("API Error, using fallback"); }
             document.getElementById('input-gbp-limit').value = bankrollGbp;
             switchTab(currentTab);
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v1.7', tabName);
+            localStorage.setItem('activeTab_v1.8', tabName);
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`nav-${tabName}`).classList.add('active');
             document.getElementById('view-title').innerText = tabName;
-            if(tabName === 'Admin') {
-                document.getElementById('tab-content').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
+            
+            const dash = document.getElementById('dashboard-view');
+            const grid = document.getElementById('tab-content');
+            const admin = document.getElementById('admin-panel');
+            
+            dash.classList.add('hidden');
+            grid.classList.add('hidden');
+            admin.classList.add('hidden');
+
+            if(tabName === 'Home') {
+                dash.classList.remove('hidden');
+                updateDashboard();
+            } else if(tabName === 'Admin') {
+                admin.classList.remove('hidden');
             } else {
-                document.getElementById('tab-content').classList.remove('hidden');
-                document.getElementById('admin-panel').classList.add('hidden');
+                grid.classList.remove('hidden');
                 renderGrid(tabName);
             }
-            updateStats();
+        }
+
+        function updateDashboard() {
+            const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+            const limitUsd = bankrollGbp * exchangeRate;
+            const remainingUsd = limitUsd - totalActualUsd;
+            const burnPercent = (totalActualUsd / limitUsd) * 100;
+
+            // Goal
+            document.getElementById('dash-goal-usd').innerText = `$${Math.round(limitUsd).toLocaleString()}`;
+            document.getElementById('dash-goal-gbp').innerText = `£${Math.round(bankrollGbp).toLocaleString()}`;
+
+            // Spent
+            document.getElementById('dash-spent-usd').innerText = `$${Math.round(totalActualUsd).toLocaleString()}`;
+            document.getElementById('dash-spent-gbp').innerText = `£${Math.round(totalActualUsd / exchangeRate).toLocaleString()}`;
+
+            // Remaining
+            document.getElementById('dash-remain-usd').innerText = `$${Math.round(remainingUsd).toLocaleString()}`;
+            document.getElementById('dash-remain-gbp').innerText = `£${Math.round(remainingUsd / exchangeRate).toLocaleString()}`;
+
+            // Visuals
+            document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
+            document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
+            
+            const card = document.getElementById('dash-remain-card');
+            remainingUsd < 0 ? card.classList.replace('border-green-500', 'border-red-500') : card.classList.replace('border-red-500', 'border-green-500');
         }
 
         function renderGrid(filter) {
             const grid = document.getElementById('tab-content');
-            const data = filter === 'Home' ? tripData : tripData.filter(d => d.loc === filter);
+            const data = tripData.filter(d => d.loc === filter);
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
                 const variance = item.usd - item.spent;
@@ -189,41 +228,22 @@
                     </div>
                     <p class="card-activity">${item.activity}</p>
                     <div class="card-footer">
-                        <div class="flex flex-col">
-                            <span class="footer-label">Budget</span>
-                            <span class="footer-val">$${item.usd}</span>
-                        </div>
-                        <div class="flex flex-col text-right">
-                            <span class="footer-label">Spent</span>
-                            <span class="footer-val text-indigo-600">$${item.spent}</span>
-                        </div>
+                        <div class="flex flex-col"><span class="footer-label">Planned</span><span class="footer-val text-xs">$${item.usd}</span></div>
+                        <div class="flex flex-col text-right"><span class="footer-label">Spent</span><span class="footer-val text-indigo-600">$${item.spent}</span></div>
                     </div>
-                    <div class="flex justify-between mt-2 pt-2 border-t border-slate-50 items-center">
-                         <span class="footer-label">Variance</span>
-                         <span class="text-xs font-black ${vColor}">${variance >= 0 ? '+' : ''}${variance}</span>
+                    <div class="mt-2 pt-2 border-t border-slate-50 flex justify-between items-center">
+                        <span class="footer-label font-bold uppercase text-[7px]">Diff</span>
+                        <span class="${vColor} font-black text-[10px]">${variance >= 0 ? '+' : ''}${variance}</span>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function updateStats() {
-            const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
-            const limitUsd = bankrollGbp * exchangeRate;
-            const remainingUsd = limitUsd - totalActualUsd;
-            document.getElementById('stat-goal').innerText = `$${Math.round(limitUsd)}`;
-            document.getElementById('stat-spent').innerText = `$${Math.round(totalActualUsd)}`;
-            document.getElementById('stat-remain').innerText = `$${Math.round(remainingUsd)}`;
-            document.getElementById('calc-usd-limit').innerText = `$${limitUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            const remainBg = document.getElementById('stat-remain-bg');
-            if(remainingUsd < 0) { remainBg.classList.add('danger'); }
-            else { remainBg.classList.remove('danger'); }
-        }
-
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            updateStats();
-            alert("Bankroll Updated!");
+            switchTab('Home');
+            alert("Bankroll Synchronized!");
         }
 
         function openEdit(index) {
@@ -240,7 +260,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v1.7', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v1.8', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
@@ -252,6 +272,7 @@
         }
 
         init();
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
