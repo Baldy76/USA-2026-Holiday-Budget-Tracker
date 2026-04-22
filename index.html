@@ -6,39 +6,76 @@
     <title>Holiday Budget Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
+    <style>
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow: hidden; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-slate-50 font-sans text-slate-900">
 
-    <header class="bg-blue-600 text-white p-6 shadow-lg sticky top-0 z-10">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Holiday Tracker</h1>
+    <header class="bg-indigo-700 text-white p-6 shadow-md sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold">USA Trip Budget</h1>
+                <p id="live-rate" class="text-xs opacity-70 italic">Syncing rates...</p>
+            </div>
             <div class="text-right">
-                <p id="live-rate" class="text-sm opacity-80">Fetching live rate...</p>
-                <p class="text-xl font-mono">£1 = <span id="usd-rate">--</span> USD</p>
+                <span class="text-xs uppercase tracking-widest opacity-80">Live Rate</span>
+                <p class="text-2xl font-mono">£1 = $<span id="usd-rate">1.35</span></p>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4">
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                <p class="text-gray-500 uppercase text-xs font-bold">Total Budget (USD)</p>
-                <h2 id="total-usd" class="text-3xl font-bold">$0.00</h2>
+    <main class="max-w-7xl mx-auto p-4 pb-24">
+        <section class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-xs font-bold uppercase">Total Budget (£)</p>
+                <h2 id="total-gbp" class="text-2xl font-bold text-indigo-600">£0.00</h2>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-gray-500 uppercase text-xs font-bold">Current Cost (GBP)</p>
-                <h2 id="total-gbp" class="text-3xl font-bold">£0.00</h2>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-xs font-bold uppercase">Total in USD ($)</p>
+                <h2 id="total-usd" class="text-2xl font-bold text-green-600">$0.00</h2>
             </div>
         </section>
 
-        <div id="budget-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <div id="budget-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             </div>
     </main>
 
+    <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <h3 class="text-xl font-bold mb-4" id="modal-title">Edit Day</h3>
+                <label class="block text-sm font-medium text-gray-700">Activities</label>
+                <textarea id="edit-activity" class="mt-1 block w-full border border-gray-300 rounded-md p-2 mb-4" rows="3"></textarea>
+                
+                <label class="block text-sm font-medium text-gray-700">Budget (£)</label>
+                <input type="number" id="edit-gbp" class="mt-1 block w-full border border-gray-300 rounded-md p-2 mb-6">
+
+                <div class="flex justify-end pt-2">
+                    <button onclick="toggleModal()" class="px-4 py-2 bg-gray-200 text-black rounded-lg mr-2">Cancel</button>
+                    <button onclick="saveChanges()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Use a 2026-reliable public API for conversion
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
-        let exchangeRate = 1.35; // Fallback
+        let exchangeRate = 1.35;
+        let editingIndex = null;
+
+        // Default Data from your image (Converted roughly to £ for start)
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget')) || [
+            { day: "Mon 20-Jul", activity: "Pizza", gbp: 37 },
+            { day: "Tue 21-Jul", activity: "Disneyland: B/L/D", gbp: 370 },
+            { day: "Wed 22-Jul", activity: "San Diego: L/D", gbp: 295 },
+            { day: "Thu 23-Jul", activity: "LA: L/D", gbp: 295 },
+            { day: "Fri 24-Jul", activity: "Travel to Utah", gbp: 370 },
+            { day: "Sat 25-Jul", activity: "Utah: Dinner", gbp: 185 },
+            { day: "Sun 26-Jul", activity: "Utah: Dinner", gbp: 185 }
+        ];
 
         async function updateExchangeRate() {
             try {
@@ -46,45 +83,59 @@
                 const data = await response.json();
                 exchangeRate = data.rates.USD;
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
-                document.getElementById('live-rate').innerText = "Live Rate Updated: " + new Date().toLocaleTimeString();
-                calculateTotals();
-            } catch (error) {
-                console.error("Rate fetch failed", error);
-            }
+                document.getElementById('live-rate').innerText = "Updated: " + new Date().toLocaleTimeString();
+                render();
+            } catch (e) { console.log("Rate fetch failed, using fallback."); render(); }
         }
 
-        // Dummy data based on your image
-        const tripData = [
-            { day: "Mon 20-Jul", activity: "Pizza", usd: 50 },
-            { day: "Tue 21-Jul", activity: "Disneyland: B/L/D", usd: 500 },
-            { day: "Wed 22-Jul", activity: "San Diego: L/D", usd: 400 },
-            { day: "Thu 23-Jul", activity: "LA: L/D", usd: 400 },
-            { day: "Fri 24-Jul", activity: "Travel to Utah", usd: 500 },
-            { day: "Sat 25-Jul", activity: "Utah: Dinner", usd: 250 },
-            { day: "Sun 26-Jul", activity: "Utah: Dinner", usd: 250 },
-        ];
-
-        function renderGrid() {
+        function render() {
             const grid = document.getElementById('budget-grid');
-            grid.innerHTML = tripData.map(item => `
-                <div class="bg-white p-4 rounded shadow-sm border border-gray-200 flex flex-col justify-between min-h-[150px]">
+            let totalGbp = 0;
+            
+            grid.innerHTML = tripData.map((item, index) => {
+                totalGbp += parseFloat(item.gbp);
+                const usdValue = (item.gbp * exchangeRate).toFixed(2);
+                return `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between h-48">
                     <div>
-                        <p class="font-bold text-sm border-b pb-1 mb-2">${item.day}</p>
-                        <p class="text-xs text-gray-600 leading-tight">${item.activity}</p>
+                        <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">${item.day}</span>
+                            <button onclick="openEdit(${index})" class="text-indigo-600 text-xs font-semibold">Edit</button>
+                        </div>
+                        <p class="text-xs mt-2 line-clamp-3">${item.activity}</p>
                     </div>
-                    <div class="mt-4">
-                        <p class="text-lg font-bold text-blue-700">$${item.usd.toFixed(2)}</p>
-                        <p class="text-xs text-gray-400">≈ £${(item.usd / exchangeRate).toFixed(2)}</p>
+                    <div class="border-t pt-2 mt-2">
+                        <p class="text-sm font-bold text-slate-900">£${item.gbp}</p>
+                        <p class="text-lg font-black text-green-600">$${usdValue}</p>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
+
+            document.getElementById('total-gbp').innerText = `£${totalGbp.toLocaleString()}`;
+            document.getElementById('total-usd').innerText = `$${(totalGbp * exchangeRate).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            localStorage.setItem('holidayBudget', JSON.stringify(tripData));
         }
 
-        function calculateTotals() {
-            const totalUsd = tripData.reduce((sum, item) => sum + item.usd, 0);
-            document.getElementById('total-usd').innerText = `$${totalUsd.toLocaleString()}`;
-            document.getElementById('total-gbp').innerText = `£${(totalUsd / exchangeRate).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            renderGrid();
+        function openEdit(index) {
+            editingIndex = index;
+            document.getElementById('modal-title').innerText = `Edit ${tripData[index].day}`;
+            document.getElementById('edit-activity').value = tripData[index].activity;
+            document.getElementById('edit-gbp').value = tripData[index].gbp;
+            toggleModal();
+        }
+
+        function saveChanges() {
+            tripData[editingIndex].activity = document.getElementById('edit-activity').value;
+            tripData[editingIndex].gbp = parseFloat(document.getElementById('edit-gbp').value) || 0;
+            toggleModal();
+            render();
+        }
+
+        function toggleModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.toggle('opacity-0');
+            modal.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
         }
 
         updateExchangeRate();
