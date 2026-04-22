@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holiday Budget Tracker v1.4.1</title>
+    <title>Holiday Budget Tracker v1.5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4338ca">
@@ -18,12 +18,12 @@
     <header class="bg-indigo-700 text-white p-6 shadow-md sticky top-0 z-20">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold">USA Trip Tracker <span class="text-xs font-normal opacity-50">v1.4.1</span></h1>
-                <p id="live-rate" class="text-xs opacity-70 italic">Connecting to ExchangeRate-API...</p>
+                <h1 class="text-xl font-bold">USA Trip Tracker <span class="text-xs font-normal opacity-50">v1.5.0</span></h1>
+                <p id="live-rate" class="text-xs opacity-70 italic">Syncing rates...</p>
             </div>
             <div class="text-right">
-                <span class="text-xs uppercase tracking-widest opacity-80">Live Rate</span>
-                <p class="text-2xl font-mono">£1 = $<span id="usd-rate">--</span></p>
+                <span class="text-xs uppercase tracking-widest opacity-80 font-bold">£1 = $<span id="usd-rate">--</span></span>
+                <p class="text-xs opacity-60">Source: ExchangeRate-API</p>
             </div>
         </div>
     </header>
@@ -34,7 +34,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">Trip Bankroll</h2>
-                    <p class="text-xs text-slate-500">Total funds available in GBP (£)</p>
+                    <p class="text-xs text-slate-500">Total available funds in GBP (£)</p>
                 </div>
                 <div class="relative w-full md:w-64">
                     <span class="absolute left-4 top-3 text-slate-400 font-bold">£</span>
@@ -45,26 +45,34 @@
             </div>
         </section>
 
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Goal ($)</p>
-                <h2 id="goal-usd" class="text-2xl font-black text-slate-700">$0.00</h2>
-                <p id="goal-gbp-sub" class="text-[10px] text-slate-400 font-bold tracking-tight">--</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Bankroll ($)</p>
+                <h2 id="goal-usd" class="text-xl font-black text-slate-700">$0.00</h2>
             </div>
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Planned Spend ($)</p>
-                <h2 id="total-usd" class="text-2xl font-black text-orange-500">$0.00</h2>
-                <p id="planned-gbp-sub" class="text-[10px] text-slate-400 font-bold italic tracking-tight">--</p>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Planned ($)</p>
+                <h2 id="total-planned-usd" class="text-xl font-black text-indigo-500">$0.00</h2>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-b-4" id="status-card">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Forecast</p>
-                <h2 id="remaining-usd" class="text-2xl font-black text-slate-800">$0.00</h2>
-                <p id="forecast-label" class="text-[10px] font-bold uppercase tracking-widest mt-1">--</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Actual Spent ($)</p>
+                <h2 id="total-actual-usd" class="text-xl font-black text-orange-600">$0.00</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-b-4" id="status-card">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Remaining Bankroll</p>
+                <h2 id="remaining-usd" class="text-xl font-black text-slate-800">$0.00</h2>
+                <p id="forecast-label" class="text-[10px] font-bold uppercase mt-1">--</p>
             </div>
         </section>
 
-        <div class="w-full bg-slate-200 rounded-full h-2 mb-8 overflow-hidden">
-            <div id="budget-progress" class="bg-indigo-600 h-full transition-all duration-500" style="width: 0%"></div>
+        <div class="mb-8">
+            <div class="flex justify-between mb-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Burn Rate (Actual vs Planned)</span>
+                <span id="progress-percent" class="text-[10px] font-bold text-slate-400 uppercase">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                <div id="budget-progress" class="bg-indigo-600 h-full transition-all duration-700" style="width: 0%"></div>
+            </div>
         </div>
 
         <div id="budget-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
@@ -79,85 +87,80 @@
 
     <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-60"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50">
             <div class="modal-content py-6 text-left px-8">
                 <h3 class="text-xl font-bold text-slate-800 mb-6" id="modal-title">Edit Entry</h3>
                 
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date/Label</label>
-                    <input type="text" id="edit-day" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Activities</label>
-                    <textarea id="edit-activity" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none" rows="3"></textarea>
-                </div>
-                
-                <div class="mb-8">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Daily Budget ($)</label>
-                    <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
-                        <input type="number" id="edit-usd" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-7 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
+                        <input type="text" id="edit-day" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Budget ($)</label>
+                        <input type="number" id="edit-usd" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold">
                     </div>
                 </div>
 
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-indigo-600 uppercase mb-1">ACTUAL SPENT TODAY ($)</label>
+                    <input type="number" id="edit-spent" step="0.01" class="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none font-black text-lg text-indigo-700" placeholder="0.00">
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Activities</label>
+                    <textarea id="edit-activity" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" rows="2"></textarea>
+                </div>
+
                 <div class="flex flex-col gap-3">
-                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition-all">Save Changes</button>
-                    <button onclick="deleteDay()" id="delete-btn" class="w-full py-2 text-red-500 text-xs font-bold uppercase tracking-widest">Delete Entry</button>
-                    <button onclick="toggleModal()" class="w-full py-2 text-slate-400 text-sm font-semibold italic text-center">Cancel</button>
+                    <button onclick="saveChanges()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Save & Sync</button>
+                    <button onclick="deleteDay()" id="delete-btn" class="w-full py-2 text-red-400 text-[10px] font-bold uppercase">Delete Entry</button>
+                    <button onclick="toggleModal()" class="w-full py-2 text-slate-400 text-sm font-semibold italic text-center">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // SOURCE: Using ExchangeRate-API (exchangerate-api.com)
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
-        let exchangeRate = 1.30; // Global fallback
+        let exchangeRate = 1.30; 
         let editingIndex = null;
         let globalLimitGbp = localStorage.getItem('holidayLimitGbp') || 5000;
 
-        // Trip Dataset
         const defaultData = [
-            { day: "Mon 20-Jul", activity: "Pizza", usd: 50 },
-            { day: "Tue 21-Jul", activity: "Disneyland: Breakfast, Lunch, Dinner, Spends", usd: 500 },
-            { day: "Wed 22-Jul", activity: "San Diego: Lunch, Dinner, Spends", usd: 400 },
-            { day: "Thu 23-Jul", activity: "LA: Lunch, Dinner, Spends", usd: 400 },
-            { day: "Fri 24-Jul", activity: "Travel to Utah: Breakfast, Lunch, Dinner, Shopping", usd: 500 },
-            { day: "Sat 25-Jul", activity: "Utah: Dinner, Spends", usd: 250 },
-            { day: "Sun 26-Jul", activity: "Utah: Dinner, Spends", usd: 250 },
-            { day: "Mon 27-Jul", activity: "Utah: Dinner, Spends", usd: 250 },
-            { day: "Tue 28-Jul", activity: "Utah: Lunch, Dinner, Spends", usd: 300 },
-            { day: "Wed 29-Jul", activity: "Utah (SLC): Lunch, Dinner, Spends", usd: 500 },
-            { day: "Thu 30-Jul", activity: "Utah: Lunch, Dinner, Spends", usd: 300 },
-            { day: "Fri 31-Jul", activity: "Utah: Dinner, Spends", usd: 250 },
-            { day: "Sat 01-Aug", activity: "Travel to Vegas: Lunch, Food Shop, Dinner, Ubers", usd: 500 },
-            { day: "Sun 02-Aug", activity: "Vegas: Shopping, Lunch, Dinner, Spends", usd: 1000 },
-            { day: "Mon 03-Aug", activity: "Vegas: Lunch, Dinner, Spends", usd: 300 },
-            { day: "Tue 04-Aug", activity: "Vegas: Dinner, Spends", usd: 200 },
-            { day: "Wed 05-Aug", activity: "Vegas: Lunch, Dinner, Spends", usd: 500 },
-            { day: "Thu 06-Aug", activity: "Vegas: Lunch, Dinner, Spends", usd: 200 },
-            { day: "Fri 07-Aug", activity: "Flight Home", usd: 0 }
+            { day: "Mon 20-Jul", activity: "Pizza", usd: 50, spent: 0 },
+            { day: "Tue 21-Jul", activity: "Disneyland", usd: 500, spent: 0 },
+            { day: "Wed 22-Jul", activity: "San Diego", usd: 400, spent: 0 },
+            { day: "Thu 23-Jul", activity: "LA: Lunch/Dinner", usd: 400, spent: 0 },
+            { day: "Fri 24-Jul", activity: "Travel to Utah", usd: 500, spent: 0 },
+            { day: "Sat 25-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Sun 26-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Mon 27-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Tue 28-Jul", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
+            { day: "Wed 29-Jul", activity: "Utah (SLC)", usd: 500, spent: 0 },
+            { day: "Thu 30-Jul", activity: "Utah: Lunch/Dinner", usd: 300, spent: 0 },
+            { day: "Fri 31-Jul", activity: "Utah: Dinner", usd: 250, spent: 0 },
+            { day: "Sat 01-Aug", activity: "Travel to Vegas", usd: 500, spent: 0 },
+            { day: "Sun 02-Aug", activity: "Vegas Shopping", usd: 1000, spent: 0 },
+            { day: "Mon 03-Aug", activity: "Vegas L/D", usd: 300, spent: 0 },
+            { day: "Tue 04-Aug", activity: "Vegas Dinner", usd: 200, spent: 0 },
+            { day: "Wed 05-Aug", activity: "Vegas L/D", usd: 500, spent: 0 },
+            { day: "Thu 06-Aug", activity: "Vegas L/D", usd: 200, spent: 0 },
+            { day: "Fri 07-Aug", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.4.1')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v1.5')) || defaultData;
 
         async function fetchRates() {
             try {
                 const res = await fetch(API_URL);
-                if(!res.ok) throw new Error("API Limit reached");
                 const data = await res.json();
                 exchangeRate = data.rates.USD;
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
-                document.getElementById('live-rate').innerText = "Live: £1 = $" + exchangeRate.toFixed(2);
+                document.getElementById('live-rate').innerText = "Rates Live: " + new Date().toLocaleTimeString();
                 document.getElementById('global-limit').value = globalLimitGbp;
                 render();
-            } catch (e) {
-                console.error("Currency fetch failed:", e);
-                document.getElementById('live-rate').innerText = "Offline Mode: Using standard fallback (1.30)";
-                document.getElementById('usd-rate').innerText = "1.30";
-                render();
-            }
+            } catch (e) { render(); }
         }
 
         function updateGlobalBudget(val) {
@@ -168,93 +171,114 @@
 
         function render() {
             const grid = document.getElementById('budget-grid');
-            let totalUsd = 0;
+            let totalPlannedUsd = 0;
+            let totalActualUsd = 0;
             
             grid.innerHTML = tripData.map((item, index) => {
-                totalUsd += parseFloat(item.usd || 0);
-                const gbpCost = (item.usd / exchangeRate).toFixed(2);
+                totalPlannedUsd += parseFloat(item.usd || 0);
+                totalActualUsd += parseFloat(item.spent || 0);
+                
+                const variance = item.usd - item.spent;
+                const statusColor = item.spent === 0 ? 'slate-100' : (variance >= 0 ? 'green-50' : 'red-50');
+                const varianceText = variance >= 0 ? `+$${variance.toFixed(0)}` : `-$${Math.abs(variance).toFixed(0)}`;
+                const varianceColor = variance >= 0 ? 'text-green-600' : 'text-red-600';
+
                 return `
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-56 transition-all">
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-${statusColor} flex flex-col justify-between h-64 transition-all">
                     <div>
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">${item.day}</span>
-                            <button onclick="openEdit(${index})" class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded-lg font-bold uppercase tracking-wider">Edit</button>
+                            <button onclick="openEdit(${index})" class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded-lg font-bold uppercase">Update</button>
                         </div>
-                        <p class="text-xs text-slate-600 leading-relaxed overflow-hidden line-clamp-4">${item.activity}</p>
+                        <p class="text-[10px] text-slate-400 line-clamp-2 italic mb-2">${item.activity}</p>
+                        
+                        <div class="flex justify-between items-end border-b pb-2 mb-2">
+                            <div>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Planned</p>
+                                <p class="text-sm font-bold text-slate-700">$${item.usd.toFixed(0)}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Spent</p>
+                                <p class="text-sm font-black text-indigo-600">$${(item.spent || 0).toFixed(0)}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-4">
-                        <p class="text-2xl font-black text-slate-800">$${item.usd.toFixed(2)}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cost: £${gbpCost}</p>
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Variance</span>
+                            <span class="text-xs font-black ${varianceColor}">${varianceText}</span>
+                        </div>
+                        <p class="text-[9px] text-slate-300 font-bold uppercase mt-1">Cost: £${(item.spent / exchangeRate).toFixed(2)}</p>
                     </div>
                 </div>`;
             }).join('');
 
             const limitUsd = globalLimitGbp * exchangeRate;
-            const remainingUsd = limitUsd - totalUsd;
-            const spentPercent = (totalUsd / limitUsd) * 100;
+            const remainingUsd = limitUsd - totalActualUsd;
+            const spentPercent = (totalActualUsd / totalPlannedUsd) * 100;
             
             document.getElementById('goal-usd').innerText = `$${limitUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-            document.getElementById('goal-gbp-sub').innerText = `BANKROLL: £${parseFloat(globalLimitGbp).toLocaleString()}`;
-            document.getElementById('total-usd').innerText = `$${totalUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('planned-gbp-sub').innerText = `TOTAL COST: £${(totalUsd / exchangeRate).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-            document.getElementById('remaining-usd').innerText = `$${Math.abs(remainingUsd).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('budget-progress').style.width = `${Math.min(spentPercent, 100)}%`;
+            document.getElementById('total-planned-usd').innerText = `$${totalPlannedUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            document.getElementById('total-actual-usd').innerText = `$${totalActualUsd.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            document.getElementById('remaining-usd').innerText = `$${remainingUsd.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            document.getElementById('progress-percent').innerText = `${Math.round(spentPercent || 0)}%`;
+            document.getElementById('budget-progress').style.width = `${Math.min(spentPercent || 0, 100)}%`;
 
             const statusCard = document.getElementById('status-card');
             const forecastLabel = document.getElementById('forecast-label');
 
             if (remainingUsd < 0) {
                 statusCard.className = "bg-white p-5 rounded-2xl shadow-sm border border-red-500 border-b-4";
-                forecastLabel.innerText = "OVER BUDGET";
+                forecastLabel.innerText = "OUT OF MONEY";
                 forecastLabel.className = "text-[10px] font-bold uppercase mt-1 text-red-500";
             } else {
                 statusCard.className = "bg-white p-5 rounded-2xl shadow-sm border border-green-500 border-b-4";
-                forecastLabel.innerText = "REMAINING SAFE";
+                forecastLabel.innerText = "BUDGET HEALTHY";
                 forecastLabel.className = "text-[10px] font-bold uppercase mt-1 text-green-500";
             }
             
-            localStorage.setItem('holidayBudget_v1.4.1', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v1.5', JSON.stringify(tripData));
         }
 
         function openEdit(index) {
             editingIndex = index;
-            document.getElementById('modal-title').innerText = "Edit Entry";
+            document.getElementById('modal-title').innerText = "Update " + tripData[index].day;
             document.getElementById('edit-day').value = tripData[index].day;
             document.getElementById('edit-activity').value = tripData[index].activity;
             document.getElementById('edit-usd').value = tripData[index].usd;
+            document.getElementById('edit-spent').value = tripData[index].spent || 0;
             document.getElementById('delete-btn').classList.remove('hidden');
             toggleModal();
         }
 
         function addNewDay() {
             editingIndex = tripData.length;
-            document.getElementById('modal-title').innerText = "Add New Day";
+            document.getElementById('modal-title').innerText = "Add Trip Entry";
             document.getElementById('edit-day').value = "";
             document.getElementById('edit-activity').value = "";
             document.getElementById('edit-usd').value = "0";
+            document.getElementById('edit-spent').value = "0";
             document.getElementById('delete-btn').classList.add('hidden');
             toggleModal();
         }
 
         function saveChanges() {
             const entry = {
-                day: document.getElementById('edit-day').value || "New Day",
+                day: document.getElementById('edit-day').value || "Day",
                 activity: document.getElementById('edit-activity').value || "",
-                usd: parseFloat(document.getElementById('edit-usd').value) || 0
+                usd: parseFloat(document.getElementById('edit-usd').value) || 0,
+                spent: parseFloat(document.getElementById('edit-spent').value) || 0
             };
             
-            if (editingIndex === tripData.length) {
-                tripData.push(entry);
-            } else {
-                tripData[editingIndex] = entry;
-            }
+            if (editingIndex === tripData.length) tripData.push(entry);
+            else tripData[editingIndex] = entry;
             
             toggleModal();
             render();
         }
 
         function deleteDay() {
-            if(confirm("Permanently delete this entry?")) {
+            if(confirm("Remove entry?")) {
                 tripData.splice(editingIndex, 1);
                 toggleModal();
                 render();
@@ -262,14 +286,13 @@
         }
 
         function toggleModal() {
-            const modal = document.getElementById('modal');
-            modal.classList.toggle('opacity-0');
-            modal.classList.toggle('pointer-events-none');
+            document.getElementById('modal').classList.toggle('opacity-0');
+            document.getElementById('modal').classList.toggle('pointer-events-none');
             document.body.classList.toggle('modal-active');
         }
 
         fetchRates();
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
