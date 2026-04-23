@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v3.1.0</title>
+    <title>USA Trip Tracker v3.2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#4338ca">
 </head>
-<body class="bg-slate-50 text-slate-900 no-scrollbar transition-colors duration-300">
+<body class="bg-slate-100 text-slate-900 no-scrollbar transition-colors duration-300">
 
     <header id="main-header" class="theme-home sticky top-0 z-30 transition-all duration-500">
         <div class="max-w-6xl mx-auto p-6 pb-5">
@@ -49,12 +49,12 @@
         
         <div id="dashboard-view" class="space-y-6">
             
-            <div class="surface-card p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 mt-2 border-surface">
+            <div class="surface-card p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 mt-2 border-2 border-surface">
                 <div class="flex justify-between mb-3 items-center">
                     <span class="text-[10px] font-black text-mute uppercase tracking-widest">Overall Budget Burn</span>
                     <span id="burn-percent" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1 rounded-full text-[10px] font-black tracking-tighter">0%</span>
                 </div>
-                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden p-1 shadow-inner">
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden p-1 shadow-inner">
                     <div id="burn-progress" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-indigo-600" style="width: 0%"></div>
                 </div>
             </div>
@@ -64,18 +64,18 @@
                     <span class="text-lg">🗺️</span>
                     <p class="text-[11px] font-black text-mute uppercase tracking-widest">Regional Health</p>
                 </div>
-                <div id="regional-stats" class="space-y-4"></div>
+                <div id="regional-stats" class="space-y-5"></div>
             </div>
         </div>
 
-        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
 
         <div id="admin-panel" class="hidden space-y-6">
-            <section class="surface-card p-8 rounded-[40px] shadow-2xl border-surface">
+            <section class="surface-card p-8 rounded-[40px] shadow-2xl border-2 border-surface">
                 <h2 class="text-xl font-black text-primary mb-6">System Controls</h2>
                 
                 <div class="space-y-5">
-                    <div class="p-6 bg-surface-alt rounded-3xl border-surface flex justify-between items-center">
+                    <div class="p-6 bg-surface-alt rounded-3xl border border-surface flex justify-between items-center">
                         <div>
                             <p class="text-[10px] font-black text-mute uppercase tracking-widest">Vegas Mode</p>
                             <p class="text-xs font-bold text-primary mt-1">Dark Theme</p>
@@ -86,7 +86,7 @@
                         </label>
                     </div>
 
-                    <div class="p-6 bg-surface-alt rounded-3xl border-surface">
+                    <div class="p-6 bg-surface-alt rounded-3xl border border-surface">
                         <p class="text-[10px] font-black text-mute uppercase mb-4 tracking-widest">Master Budget (£)</p>
                         <div class="relative mb-4">
                             <span class="absolute left-5 top-4 text-indigo-600 font-black text-xl">£</span>
@@ -95,7 +95,7 @@
                         <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Save Budget</button>
                     </div>
 
-                    <div class="p-6 bg-surface-alt rounded-3xl border-surface grid gap-3">
+                    <div class="p-6 bg-surface-alt rounded-3xl border border-surface grid gap-3">
                         <p class="text-[10px] font-black text-mute uppercase mb-1 tracking-widest">System Maintenance</p>
                         <button onclick="systemSync()" class="btn-action bg-slate-800 dark:bg-slate-200 dark:text-slate-900 text-[10px]">
                             🔄 Fetch Live Currency
@@ -111,17 +111,27 @@
 
     <nav class="nav-container">
         <div class="nav-wrapper">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn"><span class="nav-icon">🌴</span><span class="nav-text">LA</span></button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn"><span class="nav-icon">🏔️</span><span class="nav-text">Utah</span></button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center"><span>🏠</span></button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn"><span class="nav-icon">🎰</span><span class="nav-text">Vegas</span></button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn"><span class="nav-icon">⚙️</span><span class="nav-text">Admin</span></button>
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn">
+                <span class="nav-icon">🌴</span><span class="nav-text">LA</span>
+            </button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn">
+                <span class="nav-icon">🏔️</span><span class="nav-text">Utah</span>
+            </button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center">
+                <span>🏠</span>
+            </button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn">
+                <span class="nav-icon">🎰</span><span class="nav-text">Vegas</span>
+            </button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn">
+                <span class="nav-icon">⚙️</span><span class="nav-text">Admin</span>
+            </button>
         </div>
     </nav>
 
     <div id="modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
         <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleModal()"></div>
-        <div class="modal-content-sheet bg-surface w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0">
+        <div class="modal-content-sheet bg-surface w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-200 dark:border-slate-700">
             <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-4 mb-2 sm:hidden"></div>
             <div class="p-8 pt-4">
                 <div class="flex justify-between items-center mb-6">
@@ -164,7 +174,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v3.1') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v3.2') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
@@ -191,10 +201,9 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v3.1')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v3.0')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v3.2')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v3.1')) || 
                        defaultData;
-
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
         async function init() {
@@ -243,7 +252,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v3.1', tabName);
+            localStorage.setItem('activeTab_v3.2', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -316,7 +325,7 @@
                 const statusBorder = actualUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
 
                 return `
-                <div class="surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-md shadow-slate-200/20 dark:shadow-none transition-colors">
+                <div class="surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-lg shadow-slate-200/40 dark:shadow-none transition-colors border border-surface">
                     <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center gap-2">
                             <span class="text-xl">${icon}</span>
@@ -343,7 +352,6 @@
 
         let touchStartX = 0;
         let touchEndX = 0;
-
         function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
         function handleTouchEnd(e, index) {
             touchEndX = e.changedTouches[0].screenX;
@@ -357,7 +365,6 @@
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
                 
-                // Parse "Mon 20-Jul" into Calendar Stub
                 let dayName = "Day", dayNum = "00", month = "MTH";
                 if(item.day.includes(' ')) {
                     const parts = item.day.split(' ');
@@ -372,45 +379,48 @@
                 }
 
                 return `
-                <div class="ticket-card surface-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
+                <div class="ticket-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
                     <div class="absolute inset-y-0 right-0 bg-indigo-500 w-16 rounded-r-[32px] flex items-center justify-center -z-10 opacity-0 transition-opacity">
                         <span class="text-white text-xs font-bold -rotate-90 tracking-widest">EDIT</span>
                     </div>
-                    <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col">
+                    
+                    <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col shadow-lg border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
                         
-                        <div class="p-4 flex gap-4 items-center relative">
-                            <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-lg shadow-indigo-500/30 text-white">
-                                <p class="text-[8px] font-black uppercase opacity-80">${month}</p>
-                                <p class="text-2xl font-black leading-none my-0.5 tracking-tighter">${dayNum}</p>
-                                <p class="text-[8px] font-black uppercase opacity-80">${dayName}</p>
+                        <div class="p-5 flex gap-4 items-center relative bg-white dark:bg-slate-800">
+                            <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-md shadow-indigo-500/20 text-white border border-indigo-400/30">
+                                <p class="text-[8px] font-black uppercase opacity-90">${month}</p>
+                                <p class="text-2xl font-black leading-none my-0.5 tracking-tighter drop-shadow-md">${dayNum}</p>
+                                <p class="text-[8px] font-black uppercase opacity-90">${dayName}</p>
                             </div>
                             
                             <div class="flex-grow">
                                 <div class="flex justify-between items-start mb-1.5">
-                                    <span class="bg-surface-alt text-mute px-2 py-0.5 rounded-md text-[8px] font-black tracking-widest border border-surface">${item.cat}</span>
-                                    <button onclick="openEdit(${globalIndex})" class="text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
+                                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded-md text-[8px] font-black tracking-widest uppercase">${item.cat}</span>
+                                    <button onclick="openEdit(${globalIndex})" class="text-slate-300 dark:text-slate-500 hover:text-indigo-500 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
                                     </button>
                                 </div>
-                                <p class="text-sm font-bold text-primary leading-tight line-clamp-2">"${item.activity}"</p>
+                                <p class="text-sm font-black text-primary leading-tight line-clamp-2 mt-1">"${item.activity}"</p>
                             </div>
                         </div>
 
-                        <div class="relative border-t-2 border-dashed border-surface-alt mx-4">
-                            <div class="absolute -left-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-surface-alt"></div>
-                            <div class="absolute -right-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-surface-alt"></div>
+                        <div class="relative flex items-center bg-indigo-50/60 dark:bg-indigo-900/20">
+                            <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-r-full border-y-2 border-r-2 border-slate-200 dark:border-slate-700 -ml-[2px]"></div>
+                            <div class="flex-grow border-t-2 border-dashed border-indigo-200 dark:border-indigo-800 mx-2"></div>
+                            <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-l-full border-y-2 border-l-2 border-slate-200 dark:border-slate-700 -mr-[2px]"></div>
                         </div>
 
-                        <div class="p-4 bg-surface-alt rounded-b-[32px] grid grid-cols-2 gap-4 items-center">
+                        <div class="p-5 pt-3 pb-6 bg-indigo-50/60 dark:bg-indigo-900/20 grid grid-cols-2 gap-4 items-center">
                             <div>
-                                <span class="inline-block bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-0.5">Goal Plan</span>
-                                <p class="text-lg font-black text-primary">$${item.usd}</p>
+                                <span class="inline-block bg-indigo-200/50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-indigo-300/30">Goal Plan</span>
+                                <p class="text-xl font-black text-indigo-900 dark:text-indigo-100">$${item.usd}</p>
                             </div>
-                            <div class="text-right border-l border-surface pl-4">
-                                <span class="inline-block bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-0.5">Actual Spend</span>
-                                <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
+                            <div class="text-right border-l-2 border-indigo-200/50 dark:border-indigo-800 pl-4">
+                                <span class="inline-block bg-emerald-200/50 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-emerald-300/30">Actual Spend</span>
+                                <p class="text-xl font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
                             </div>
                         </div>
+
                     </div>
                 </div>`;
             }).join('');
@@ -419,8 +429,9 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v3.1', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v3.2', JSON.stringify(tripData));
             switchTab('Home');
+            alert("✅ Budget Plan Updated!");
         }
 
         async function systemSync() {
@@ -456,7 +467,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v3.1', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v3.2', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
