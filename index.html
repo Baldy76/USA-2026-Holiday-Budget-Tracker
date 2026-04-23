@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.0.0</title>
+    <title>USA Trip Tracker v4.1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -50,16 +50,16 @@
         
         <div id="dashboard-view" class="space-y-6">
             
-            <div class="slush-card p-6 rounded-[35px] shadow-xl mt-2 relative overflow-hidden">
-                <div class="absolute -right-4 -top-2 text-7xl opacity-20 transform rotate-12">💎</div>
+            <div class="bg-slate-800 dark:bg-slate-900 p-6 rounded-[35px] shadow-xl mt-2 relative overflow-hidden border border-slate-700">
+                <div class="absolute -right-2 -top-4 text-8xl opacity-10 transform rotate-12">⛽</div>
                 <div class="flex justify-between mb-1 items-start relative z-10">
-                    <span class="text-[10px] font-black text-teal-100 uppercase tracking-widest">💎 The Slush Fund</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">⛽ Hire Car Fuel Total</span>
                 </div>
-                <div class="flex justify-between items-end relative z-10">
-                    <h2 id="slush-usd" class="text-4xl font-black text-white">$0</h2>
-                    <h3 id="slush-gbp" class="text-lg font-bold text-teal-200">£0</h3>
+                <div class="flex justify-between items-end relative z-10 mt-2">
+                    <h2 id="fuel-usd" class="text-4xl font-black text-white">$0</h2>
+                    <h3 id="fuel-gbp" class="text-lg font-bold text-slate-400">£0</h3>
                 </div>
-                <p class="text-[9px] text-teal-50 font-medium mt-2 relative z-10 uppercase tracking-widest opacity-80">Accumulated Savings. Treat Yourself!</p>
+                <p class="text-[9px] text-slate-500 font-medium mt-2 relative z-10 uppercase tracking-widest">Combined from all regions</p>
             </div>
 
             <div class="surface-card p-6 rounded-[35px] shadow-lg shadow-indigo-100/50 border-surface border">
@@ -90,14 +90,18 @@
             </div>
         </div>
 
-        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+        <div id="tab-content-container" class="hidden">
+            <div id="location-fuel-container"></div>
+            
+            <div id="tab-content" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6"></div>
+        </div>
 
         <div id="admin-panel" class="hidden space-y-6">
             <section class="surface-card p-8 rounded-[40px] shadow-2xl border-2 border-surface">
                 <h2 class="text-xl font-black text-primary mb-6">System Controls</h2>
                 
                 <div class="space-y-5">
-                    <div class="p-6 bg-surface-alt rounded-3xl border border-surface flex justify-between items-center">
+                    <div class="p-6 bg-surface-alt rounded-3xl border-surface flex justify-between items-center">
                         <div>
                             <p class="text-[10px] font-black text-mute uppercase tracking-widest">Vegas Mode</p>
                             <p class="text-xs font-bold text-primary mt-1">Dark Theme</p>
@@ -151,7 +155,6 @@
                     <button onclick="toggleModal(false)" class="bg-surface-alt p-2 rounded-full text-mute hover:text-primary transition-colors">✕</button>
                 </div>
                 <div class="space-y-5">
-                    
                     <div class="modal-field">
                         <label>Category</label>
                         <select id="edit-cat" class="modal-input-premium appearance-none">
@@ -162,7 +165,6 @@
                             <option value="🏨 Stay">🏨 Stay</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div class="modal-field">
                             <label>Planned ($)</label>
@@ -183,13 +185,34 @@
         </div>
     </div>
 
+    <div id="fuel-modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleFuelModal(false)"></div>
+        <div class="modal-content-sheet bg-slate-800 w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-700">
+            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mt-4 mb-2 sm:hidden"></div>
+            <div class="p-8 pt-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black tracking-tight text-white" id="fuel-modal-title">Edit Fuel</h3>
+                    <button onclick="toggleFuelModal(false)" class="bg-slate-700 p-2 rounded-full text-slate-300 hover:text-white transition-colors">✕</button>
+                </div>
+                <div class="space-y-5">
+                    <div class="modal-field">
+                        <label class="text-slate-400">Total Fuel Spent ($)</label>
+                        <input type="number" id="edit-fuel-usd" class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 font-black text-white outline-none text-xl">
+                    </div>
+                    <button onclick="saveFuel()" class="btn-action bg-indigo-500 hover:bg-indigo-400 mt-2">Save Fuel Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.0') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.1') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
+        let editingFuelLoc = null;
 
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
@@ -213,11 +236,13 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.0')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v3.2')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.1')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.0')) || 
                        defaultData;
-
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
+
+        // FUEL DATA
+        let fuelData = JSON.parse(localStorage.getItem('holidayFuel_v4.1')) || { 'LA': 0, 'Utah': 0, 'Vegas': 0 };
 
         async function init() {
             applyTheme();
@@ -265,7 +290,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.0', tabName);
+            localStorage.setItem('activeTab_v4.1', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -275,7 +300,7 @@
             
             document.getElementById('view-title').innerText = (tabName === 'Home' ? 'Master Budget' : tabName + ' Budget');
             
-            const views = ['dashboard-view', 'tab-content', 'admin-panel'];
+            const views = ['dashboard-view', 'tab-content-container', 'admin-panel'];
             views.forEach(v => document.getElementById(v).classList.add('hidden'));
 
             if(tabName === 'Admin') {
@@ -287,7 +312,7 @@
                     document.getElementById('dashboard-view').classList.remove('hidden');
                     updateDashboard();
                 } else {
-                    document.getElementById('tab-content').classList.remove('hidden');
+                    document.getElementById('tab-content-container').classList.remove('hidden');
                     renderGrid(tabName);
                 }
                 updateHeaderStats(tabName); 
@@ -296,14 +321,18 @@
 
         function updateHeaderStats(tabName) {
             let plannedUsd = 0, spentUsd = 0, leftUsd = 0;
+            
+            const totalGlobalFuel = Object.values(fuelData).reduce((a, b) => a + b, 0);
+
             if (tabName === 'Home') {
-                spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+                spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0) + totalGlobalFuel;
                 plannedUsd = bankrollGbp * exchangeRate;
                 leftUsd = plannedUsd - spentUsd;
             } else {
                 const locData = tripData.filter(d => d.loc === tabName);
                 plannedUsd = locData.reduce((s, i) => s + (parseFloat(i.usd) || 0), 0);
-                spentUsd = locData.reduce((s, i) => s + (parseFloat(i.spent) || 0), 0);
+                // Regional fuel is tracked strictly as "Spent", reducing regional balance
+                spentUsd = locData.reduce((s, i) => s + (parseFloat(i.spent) || 0), 0) + (fuelData[tabName] || 0);
                 leftUsd = plannedUsd - spentUsd;
             }
 
@@ -322,26 +351,24 @@
 
         function updateDashboard() {
             // Core Stats
-            const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+            const totalGlobalFuel = Object.values(fuelData).reduce((a, b) => a + b, 0);
+            const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0) + totalGlobalFuel;
             const limitUsd = bankrollGbp * exchangeRate;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
 
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
-            // NEW: The Slush Fund
-            let slushUsd = tripData.reduce((s, i) => {
-                if(i.spent > 0 && i.spent < i.usd) return s + (i.usd - i.spent);
-                return s;
-            }, 0);
-            animateValue('slush-usd', Math.round(slushUsd));
-            document.getElementById('slush-gbp').innerText = `£${Math.round(slushUsd / exchangeRate)}`;
+            // NEW: Fuel Card Update
+            animateValue('fuel-usd', Math.round(totalGlobalFuel));
+            document.getElementById('fuel-gbp').innerText = `£${Math.round(totalGlobalFuel / exchangeRate)}`;
 
-            // NEW: Spending Insights
-            const catColors = { '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
+            // Spending Insights (Includes Fuel)
+            const catColors = { '⛽ Fuel': 'bg-slate-700', '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
             let catTotals = {};
             tripData.forEach(i => { if(i.spent > 0) catTotals[i.cat] = (catTotals[i.cat] || 0) + i.spent; });
-            
+            if (totalGlobalFuel > 0) catTotals['⛽ Fuel'] = totalGlobalFuel;
+
             let insightsBarHtml = '';
             let insightsLegendHtml = '';
             
@@ -369,8 +396,14 @@
             regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon]) => {
                 const data = tripData.filter(d => d.loc === loc);
                 const plannedUsd = data.reduce((s, i) => s + i.usd, 0);
-                const actualUsd = data.reduce((s, i) => s + i.spent, 0);
+                // Regional Actual includes Fuel for that location
+                const actualUsd = data.reduce((s, i) => s + i.spent, 0) + (fuelData[loc] || 0);
                 const diffUsd = plannedUsd - actualUsd;
+                
+                const plannedGbp = (plannedUsd / exchangeRate).toFixed(0);
+                const actualGbp = (actualUsd / exchangeRate).toFixed(0);
+                const diffGbp = (diffUsd / exchangeRate).toFixed(0);
+
                 const statusBorder = actualUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
                 const diffEmoji = actualUsd > 0 ? (diffUsd >= 0 ? '🥳' : '😬') : '';
 
@@ -383,17 +416,17 @@
                         </div>
                         <div class="text-right">
                              <p class="text-[8px] font-black text-mute uppercase mb-0.5">Balance ${diffEmoji}</p>
-                             <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${(diffUsd/exchangeRate).toFixed(0)}</span></p>
+                             <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${diffGbp}</span></p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-t border-surface pt-3">
                         <div>
                             <p class="text-[8px] font-black text-mute uppercase">Plan</p>
-                            <p class="text-xs font-bold text-primary">$${plannedUsd} <span class="text-[9px] text-mute">/ £${(plannedUsd/exchangeRate).toFixed(0)}</span></p>
+                            <p class="text-xs font-bold text-primary">$${plannedUsd} <span class="text-[9px] text-mute">/ £${plannedGbp}</span></p>
                         </div>
                         <div class="text-right">
                             <p class="text-[8px] font-black text-mute uppercase">Spent</p>
-                            <p class="text-xs font-black text-primary">$${actualUsd} <span class="text-[9px] text-mute">/ £${(actualUsd/exchangeRate).toFixed(0)}</span></p>
+                            <p class="text-xs font-black text-primary">$${actualUsd} <span class="text-[9px] text-mute">/ £${actualGbp}</span></p>
                         </div>
                     </div>
                 </div>`;
@@ -410,9 +443,30 @@
         }
 
         function renderGrid(filter) {
+            const fuelContainer = document.getElementById('location-fuel-container');
             const grid = document.getElementById('tab-content');
-            const data = tripData.filter(d => d.loc === filter);
             
+            // Inject Static Fuel Pill at Top
+            fuelContainer.innerHTML = `
+                <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-md flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-slate-700 p-3 rounded-2xl text-2xl shadow-inner">⛽</div>
+                        <div>
+                            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Hire Car</p>
+                            <p class="text-sm font-bold text-white">Refuelling</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex items-center gap-4">
+                        <div>
+                            <p class="text-2xl font-black text-white leading-none">$${fuelData[filter] || 0}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">£${((fuelData[filter] || 0)/exchangeRate).toFixed(0)}</p>
+                        </div>
+                        <button onclick="openFuelEdit('${filter}')" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase transition-colors shadow-lg">Add</button>
+                    </div>
+                </div>
+            `;
+
+            const data = tripData.filter(d => d.loc === filter);
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
                 
@@ -430,7 +484,7 @@
                 }
 
                 return `
-                <div class="ticket-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
+                <div class="ticket-card surface-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
                     <div class="absolute inset-y-0 right-0 bg-indigo-500 w-16 rounded-r-[32px] flex items-center justify-center -z-10 opacity-0 transition-opacity">
                         <span class="text-white text-xs font-bold -rotate-90 tracking-widest">EDIT</span>
                     </div>
@@ -478,7 +532,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.0', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.1', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -499,6 +553,33 @@
             }
         }
 
+        // FUEL LOGIC
+        function openFuelEdit(loc) {
+            editingFuelLoc = loc;
+            document.getElementById('fuel-modal-title').innerText = `${loc} Refuelling`;
+            document.getElementById('edit-fuel-usd').value = fuelData[loc] || 0;
+            toggleFuelModal(true);
+        }
+
+        function saveFuel() {
+            fuelData[editingFuelLoc] = parseFloat(document.getElementById('edit-fuel-usd').value) || 0;
+            localStorage.setItem('holidayFuel_v4.1', JSON.stringify(fuelData));
+            toggleFuelModal(false);
+            switchTab(currentTab);
+        }
+
+        function toggleFuelModal(show) {
+            const m = document.getElementById('fuel-modal');
+            if (show) {
+                m.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
+            } else {
+                m.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
+            }
+        }
+
+        // ACTIVITY EDIT LOGIC
         function openEdit(index) {
             editingIndex = index;
             const item = tripData[index];
@@ -519,11 +600,9 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.0', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.1', JSON.stringify(tripData));
 
-            // MICRO-INTERACTIONS LOGIC
             if(spent > usd && usd > 0) {
-                // OVER BUDGET -> Shake Modal
                 const modalCard = document.getElementById('modal-card');
                 modalCard.classList.add('shake-anim');
                 setTimeout(() => {
@@ -532,12 +611,10 @@
                     switchTab(currentTab);
                 }, 400);
             } else if (spent > 0 && spent < usd) {
-                // UNDER BUDGET -> Confetti!
                 confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, zIndex: 100 });
                 toggleModal(false);
                 switchTab(currentTab);
             } else {
-                // NEUTRAL
                 toggleModal(false);
                 switchTab(currentTab);
             }
