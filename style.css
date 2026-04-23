@@ -4,10 +4,7 @@
 }
 
 /* THEME SYSTEM */
-body { 
-    background-color: #f1f5f9; 
-    transition: background-color 0.3s, color 0.3s; 
-}
+body { background-color: #f1f5f9; transition: background-color 0.3s, color 0.3s; }
 body.dark { background-color: #020617; color: #f8fafc; }
 
 .bg-surface { background: white; }
@@ -32,12 +29,6 @@ body.dark .text-mute { color: #94a3b8; }
 .theme-vegas { background: linear-gradient(135deg, #4c1d95 0%, #d946ef 100%); }
 .theme-admin { background: linear-gradient(135deg, #1e293b 0%, #020617 100%); }
 
-/* Dashboard Exclusive Slush Fund */
-.slush-card {
-    background: linear-gradient(135deg, #0f766e 0%, #0891b2 100%);
-    color: white;
-}
-
 /* Header Stats */
 .header-stat-pill {
     background: rgba(255, 255, 255, 0.15);
@@ -55,11 +46,7 @@ body.dark .text-mute { color: #94a3b8; }
 .stat-val-sub { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); margin-top: 1px; } 
 
 /* TICKET STYLE CARDS */
-.ticket-card {
-    position: relative;
-    border-radius: 32px;
-    z-index: 1;
-}
+.ticket-card { position: relative; border-radius: 32px; z-index: 1; }
 .ticket-content {
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 12px 30px rgba(0,0,0,0.06);
@@ -111,7 +98,7 @@ body.dark .nav-wrapper { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba
 }
 body.dark .nav-btn-center { background: #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 
-/* Admin & Inputs */
+/* Admin */
 .admin-input-premium {
     width: 100%;
     background: transparent;
@@ -134,6 +121,7 @@ body.dark .admin-input-premium { border-color: #475569; color: white; }
     letter-spacing: 0.1em;
     font-size: 11px;
     transition: transform 0.2s;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 .btn-action:active { transform: scale(0.96); }
 
@@ -142,11 +130,9 @@ body.dark .admin-input-premium { border-color: #475569; color: white; }
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
-body.modal-active .modal-content-sheet {
-    transform: translateY(0);
-}
+body.modal-active .modal-content-sheet { transform: translateY(0); }
 
-/* SHAKE ANIMATION FOR OVER-BUDGET */
+/* SHAKE ANIMATION */
 .shake-anim { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 @keyframes shake {
   10%, 90% { transform: translate3d(-2px, 0, 0); }
