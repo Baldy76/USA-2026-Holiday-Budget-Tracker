@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>USA Trip Tracker v2.2.0</title>
+    <title>USA Trip Tracker v2.3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#4338ca">
 </head>
 <body class="bg-slate-50 text-slate-900 no-scrollbar">
@@ -19,7 +19,7 @@
                     <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
                     <p id="view-title" class="text-white/80 text-[10px] uppercase font-black tracking-[0.2em]">Dashboard</p>
                 </div>
-                <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 text-white">
+                <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 text-white shadow-sm">
                     <p class="text-[8px] font-black uppercase opacity-70 leading-none mb-1">Live Rate</p>
                     <p class="text-sm font-mono font-black">£1 = $<span id="usd-rate">1.35</span></p>
                 </div>
@@ -46,8 +46,8 @@
         
         <div id="dashboard-view" class="space-y-6">
             <div class="flex items-center gap-2 mb-2 ml-2">
-                <span class="text-lg">📊</span>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Performance</p>
+                <span class="text-lg">🗺️</span>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Health</p>
             </div>
             <div id="regional-stats" class="space-y-4"></div>
 
@@ -56,32 +56,35 @@
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Budget Burn</span>
                     <span id="burn-percent" class="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-tighter">0%</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden p-1">
+                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden p-1 shadow-inner">
                     <div id="burn-progress" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-indigo-600" style="width: 0%"></div>
                 </div>
             </div>
         </div>
 
-        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
 
         <div id="admin-panel" class="hidden space-y-6">
             <section class="bg-white p-8 rounded-[40px] shadow-2xl border border-slate-100">
                 <h2 class="text-xl font-black text-slate-800 mb-6">System Controls</h2>
                 
-                <div class="space-y-8">
+                <div class="space-y-5">
                     <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">1. Update Budget Plan</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">1. Master Budget (£)</p>
                         <div class="relative mb-4">
                             <span class="absolute left-5 top-4 text-indigo-600 font-black text-xl">£</span>
                             <input type="number" id="input-gbp-limit" class="admin-input-premium" placeholder="5000">
                         </div>
-                        <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Apply Budget Updates</button>
+                        <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Save Budget</button>
                     </div>
 
-                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">2. System Operations</p>
-                        <button onclick="systemSync()" class="btn-action bg-slate-900">
-                            Force Live Currency Sync
+                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200 grid gap-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">2. System Maintenance</p>
+                        <button onclick="systemSync()" class="btn-action bg-slate-800 text-[10px]">
+                            🔄 Fetch Live Currency
+                        </button>
+                        <button onclick="forceAppUpdate()" class="btn-action bg-rose-500 text-[10px]">
+                            ⚡ Force App Version Update
                         </button>
                     </div>
                 </div>
@@ -114,25 +117,25 @@
         <div class="modal-container bg-white w-full max-w-md rounded-[48px] shadow-2xl z-50 overflow-hidden">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-black tracking-tight" id="modal-title">Edit</h3>
-                    <button onclick="toggleModal()" class="bg-slate-100 p-2 rounded-full text-slate-400">✕</button>
+                    <h3 class="text-2xl font-black tracking-tight" id="modal-title">Edit Entry</h3>
+                    <button onclick="toggleModal()" class="bg-slate-100 p-2 rounded-full text-slate-400 hover:bg-slate-200 transition-colors">✕</button>
                 </div>
                 <div class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="modal-field">
-                            <label>Plan ($)</label>
+                            <label>Planned ($)</label>
                             <input type="number" id="edit-usd">
                         </div>
                         <div class="modal-field">
                             <label class="text-indigo-600">Spent ($)</label>
-                            <input type="number" id="edit-spent" class="bg-indigo-50 border-indigo-100">
+                            <input type="number" id="edit-spent" class="bg-indigo-50 border-indigo-200 text-indigo-700">
                         </div>
                     </div>
                     <div class="modal-field">
-                        <label>Notes</label>
-                        <textarea id="edit-activity" rows="2"></textarea>
+                        <label>Notes & Activities</label>
+                        <textarea id="edit-activity" rows="3"></textarea>
                     </div>
-                    <button onclick="saveChanges()" class="btn-action bg-indigo-600">Save Entry</button>
+                    <button onclick="saveChanges()" class="btn-action bg-indigo-600 mt-2">Save & Update Dashboard</button>
                 </div>
             </div>
         </div>
@@ -141,7 +144,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.2') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.3') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -167,7 +170,7 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.2')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.3')) || defaultData;
 
         async function init() {
             await fetchRates();
@@ -186,13 +189,11 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.2', tabName);
+            localStorage.setItem('activeTab_v2.3', tabName);
             
-            // Header Theme Logic
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
             
-            // UI Toggles
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
             document.getElementById('view-title').innerText = (tabName === 'Home' ? 'Dashboard' : tabName);
@@ -246,24 +247,24 @@
                 const statusBorder = actualUsd === 0 ? 'border-slate-100' : (diffUsd >= 0 ? 'border-green-400' : 'border-red-400');
 
                 return `
-                <div class="bg-white p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-sm">
+                <div class="bg-white p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-md shadow-slate-200/50">
                     <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center gap-2">
                             <span class="text-xl">${icon}</span>
                             <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">${loc}</p>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] font-black text-slate-300 uppercase">Balance</p>
+                             <p class="text-[8px] font-black text-slate-300 uppercase mb-0.5">Balance</p>
                              <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600' : 'text-red-600'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${diffGbp}</span></p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 border-t border-slate-50 pt-3">
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
                         <div>
-                            <p class="text-[8px] font-black text-slate-300 uppercase">Plan</p>
+                            <p class="text-[8px] font-black text-slate-400 uppercase">Plan</p>
                             <p class="text-xs font-bold">$${plannedUsd} <span class="text-[9px] text-slate-300">/ £${plannedGbp}</span></p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-slate-300 uppercase">Spent</p>
+                            <p class="text-[8px] font-black text-slate-400 uppercase">Spent</p>
                             <p class="text-xs font-black text-slate-900">$${actualUsd} <span class="text-[9px] text-slate-400">/ £${actualGbp}</span></p>
                         </div>
                     </div>
@@ -274,23 +275,34 @@
         function renderGrid(filter) {
             const grid = document.getElementById('tab-content');
             const data = tripData.filter(d => d.loc === filter);
+            
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
+                
+                // Holiday Ticket Design Logic
                 return `
-                <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">${item.day}</span>
-                        <button onclick="openEdit(${globalIndex})" class="bg-slate-100 px-3 py-1 rounded-full text-[9px] font-black uppercase">Edit</button>
-                    </div>
-                    <p class="text-xs font-medium text-slate-500 mb-4 h-8 line-clamp-2 italic">"${item.activity}"</p>
-                    <div class="flex justify-between items-center bg-slate-50/50 p-4 rounded-2xl">
-                        <div>
-                            <p class="text-[7px] font-black text-slate-300 uppercase">Plan</p>
-                            <p class="text-sm font-black text-slate-800">$${item.usd}</p>
+                <div class="ticket-card">
+                    <div class="p-5 pb-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-slate-900 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm">${item.day}</span>
+                            <button onclick="openEdit(${globalIndex})" class="bg-slate-100 text-slate-500 hover:bg-slate-200 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-colors">Edit</button>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[7px] font-black text-slate-300 uppercase">Actual</p>
-                            <p class="text-sm font-black text-indigo-600">$${item.spent}</p>
+                        <p class="text-sm font-bold text-slate-700 leading-snug line-clamp-2 min-h-[40px]">"${item.activity}"</p>
+                    </div>
+                    
+                    <div class="relative border-t-2 border-dashed border-slate-200 mx-4">
+                        <div class="absolute -left-6 -top-2 w-4 h-4 bg-slate-50 rounded-full"></div>
+                        <div class="absolute -right-6 -top-2 w-4 h-4 bg-slate-50 rounded-full"></div>
+                    </div>
+
+                    <div class="p-5 pt-4 bg-slate-50/50 rounded-b-[32px] grid grid-cols-2 gap-4 items-center">
+                        <div>
+                            <span class="inline-block bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1">Goal Plan</span>
+                            <p class="text-xl font-black text-slate-800">$${item.usd}</p>
+                        </div>
+                        <div class="text-right border-l border-slate-200 pl-4">
+                            <span class="inline-block bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1">Actual Spend</span>
+                            <p class="text-xl font-black text-emerald-600">$${item.spent}</p>
                         </div>
                     </div>
                 </div>`;
@@ -300,7 +312,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.2', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.3', JSON.stringify(tripData));
             switchTab('Home');
             alert("✅ Budget Plan Updated!");
         }
@@ -309,9 +321,29 @@
             const btn = event.target;
             btn.innerText = "Syncing...";
             await fetchRates();
-            btn.innerText = "Force Live Currency Sync";
+            btn.innerText = "🔄 Fetch Live Currency";
             updateDashboard();
-            alert("🚀 System Re-Synced with Live Rates!");
+            alert("🚀 Live Rates Synced.");
+        }
+
+        function forceAppUpdate() {
+            if(confirm("This will unregister the Service Worker and force the browser to pull the absolute newest version of the app files. Proceed?")) {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                caches.keys().then((keyList) => {
+                    return Promise.all(keyList.map((key) => {
+                        return caches.delete(key);
+                    }));
+                }).then(() => {
+                    alert("Cache cleared. The app will now hard refresh.");
+                    window.location.reload(true);
+                });
+            }
         }
 
         function openEdit(index) {
@@ -328,7 +360,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.2', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.3', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
