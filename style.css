@@ -3,7 +3,7 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* THEME SYSTEM (Light/Dark Mode via .dark class on body) */
+/* THEME SYSTEM */
 body { transition: background-color 0.3s, color 0.3s; }
 body.dark { background-color: #020617; color: #f8fafc; }
 
@@ -45,7 +45,7 @@ body.dark .text-mute { color: #64748b; }
 .stat-val { font-size: 16px; font-weight: 900; color: white; line-height: 1.1; }
 .stat-val-sub { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); margin-top: 1px; } 
 
-/* TICKET STYLE CARDS (With Swipe Reveal logic prep) */
+/* TICKET STYLE CARDS (v3.1 Layout) */
 .ticket-card {
     position: relative;
     border-radius: 32px;
