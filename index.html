@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v2.6.0</title>
+    <title>USA Trip Tracker v2.7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -48,13 +48,8 @@
     <main class="max-w-7xl mx-auto p-4 safe-bottom">
         
         <div id="dashboard-view" class="space-y-6">
-            <div class="flex items-center gap-2 mb-2 ml-2">
-                <span class="text-lg">🗺️</span>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Health</p>
-            </div>
-            <div id="regional-stats" class="space-y-4"></div>
-
-            <div class="bg-white p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 border border-slate-100">
+            
+            <div class="bg-white p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 border border-slate-100 mt-2">
                 <div class="flex justify-between mb-3 items-center">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Budget Burn</span>
                     <span id="burn-percent" class="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-tighter">0%</span>
@@ -63,6 +58,15 @@
                     <div id="burn-progress" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-indigo-600" style="width: 0%"></div>
                 </div>
             </div>
+
+            <div>
+                <div class="flex items-center gap-2 mb-3 ml-2">
+                    <span class="text-lg">🗺️</span>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Health</p>
+                </div>
+                <div id="regional-stats" class="space-y-4"></div>
+            </div>
+
         </div>
 
         <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
@@ -147,7 +151,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.6') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.7') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -173,10 +177,8 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        // Ensure data isn't lost during updates
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.6')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v2.5')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v2.4')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.7')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v2.6')) || 
                        defaultData;
 
         async function init() {
@@ -196,7 +198,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.6', tabName);
+            localStorage.setItem('activeTab_v2.7', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -250,12 +252,10 @@
             const spentGbp = spentUsd / exchangeRate;
             const leftGbp = leftUsd / exchangeRate;
 
-            // USD primary
             document.getElementById('stat-goal-usd').innerText = `$${Math.round(plannedUsd)}`;
             document.getElementById('stat-spent-usd').innerText = `$${Math.round(spentUsd)}`;
             document.getElementById('stat-remain-usd').innerText = `$${Math.round(leftUsd)}`;
             
-            // GBP secondary
             document.getElementById('stat-goal-gbp').innerText = `£${Math.round(plannedGbp)}`;
             document.getElementById('stat-spent-gbp').innerText = `£${Math.round(spentGbp)}`;
             document.getElementById('stat-remain-gbp').innerText = `£${Math.round(leftGbp)}`;
@@ -354,7 +354,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.6', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.7', JSON.stringify(tripData));
             switchTab('Home');
             alert("✅ Budget Plan Updated!");
         }
@@ -403,7 +403,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.6', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.7', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
