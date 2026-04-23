@@ -1,16 +1,17 @@
 {
   "name": "USA 2026",
   "short_name": "USA 26",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
