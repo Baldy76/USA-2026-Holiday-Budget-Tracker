@@ -5,7 +5,6 @@
 
 /* THEME SYSTEM */
 body { 
-    /* Changed from slate-50 to slate-100 for better white card contrast */
     background-color: #f1f5f9; 
     transition: background-color 0.3s, color 0.3s; 
 }
@@ -33,6 +32,12 @@ body.dark .text-mute { color: #94a3b8; }
 .theme-vegas { background: linear-gradient(135deg, #4c1d95 0%, #d946ef 100%); }
 .theme-admin { background: linear-gradient(135deg, #1e293b 0%, #020617 100%); }
 
+/* Dashboard Exclusive Slush Fund */
+.slush-card {
+    background: linear-gradient(135deg, #0f766e 0%, #0891b2 100%);
+    color: white;
+}
+
 /* Header Stats */
 .header-stat-pill {
     background: rgba(255, 255, 255, 0.15);
@@ -49,7 +54,7 @@ body.dark .text-mute { color: #94a3b8; }
 .stat-val { font-size: 16px; font-weight: 900; color: white; line-height: 1.1; }
 .stat-val-sub { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); margin-top: 1px; } 
 
-/* TICKET STYLE CARDS (v3.2 High Contrast Layout) */
+/* TICKET STYLE CARDS */
 .ticket-card {
     position: relative;
     border-radius: 32px;
@@ -60,7 +65,7 @@ body.dark .text-mute { color: #94a3b8; }
     box-shadow: 0 12px 30px rgba(0,0,0,0.06);
 }
 body.dark .ticket-content { box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
-.ticket-card:active .ticket-content { transform: translateX(-15px); }
+.ticket-card:active .ticket-content { transform: translateX(-20px); }
 .ticket-card:active .absolute { opacity: 1; z-index: 0; }
 
 /* FLOATING NAV */
@@ -139,6 +144,15 @@ body.dark .admin-input-premium { border-color: #475569; color: white; }
 }
 body.modal-active .modal-content-sheet {
     transform: translateY(0);
+}
+
+/* SHAKE ANIMATION FOR OVER-BUDGET */
+.shake-anim { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
 }
 
 .modal-field label { display: block; font-size: 9px; font-weight: 900; text-transform: uppercase; color: #64748b; margin-bottom: 5px; margin-left: 5px; }
