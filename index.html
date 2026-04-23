@@ -3,23 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>USA Trip Tracker v2.1.0</title>
+    <title>USA Trip Tracker v2.2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#4338ca">
 </head>
 <body class="bg-slate-50 text-slate-900 no-scrollbar">
 
-    <header class="glass-header sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto p-5 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black text-white tracking-tighter italic">USA '26</h1>
-                <p id="view-title" class="text-indigo-100 text-[10px] uppercase font-black tracking-widest">Dashboard</p>
+    <header id="main-header" class="theme-home sticky top-0 z-30 transition-all duration-500">
+        <div class="max-w-6xl mx-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
+                    <p id="view-title" class="text-white/80 text-[10px] uppercase font-black tracking-[0.2em]">Dashboard</p>
+                </div>
+                <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 text-white">
+                    <p class="text-[8px] font-black uppercase opacity-70 leading-none mb-1">Live Rate</p>
+                    <p class="text-sm font-mono font-black">£1 = $<span id="usd-rate">1.35</span></p>
+                </div>
             </div>
-            <div class="text-right text-white bg-white/20 px-4 py-1.5 rounded-full border border-white/20">
-                <p class="text-xs font-mono font-black tracking-tight">£1 = $<span id="usd-rate">--</span></p>
+            
+            <div id="header-stats" class="grid grid-cols-3 gap-3">
+                <div class="header-stat-pill">
+                    <p class="stat-label">Goal</p>
+                    <p id="stat-goal-usd" class="stat-val">$0</p>
+                </div>
+                <div class="header-stat-pill">
+                    <p class="stat-label">Spent</p>
+                    <p id="stat-spent-usd" class="stat-val">$0</p>
+                </div>
+                <div id="remain-pill" class="header-stat-pill bg-white/30 border-white/50">
+                    <p class="stat-label">Left</p>
+                    <p id="stat-remain-usd" class="stat-val">$0</p>
+                </div>
             </div>
         </div>
     </header>
@@ -27,119 +45,94 @@
     <main class="max-w-7xl mx-auto p-4 safe-bottom">
         
         <div id="dashboard-view" class="space-y-6">
-            
-            <section class="dash-card-hero">
-                <div class="flex justify-between items-start mb-4">
-                    <p class="dash-label text-white opacity-90 font-black">🏦 Master Bankroll</p>
-                </div>
-                <div class="flex justify-between items-end">
-                    <h2 id="dash-goal-usd" class="text-4xl font-black text-white">$0</h2>
-                    <h3 id="dash-goal-gbp" class="text-xl font-bold text-indigo-100">£0</h3>
-                </div>
-            </section>
-
-            <div class="grid grid-cols-2 gap-4">
-                <section class="dash-card border-l-4 border-orange-500">
-                    <p class="dash-label">💸 Total Spent</p>
-                    <h2 id="dash-spent-usd" class="text-2xl font-black text-orange-600">$0</h2>
-                    <p id="dash-spent-gbp" class="text-xs font-bold text-slate-400">£0</p>
-                </section>
-                <section id="dash-remain-card" class="dash-card border-l-4 border-green-500">
-                    <p class="dash-label">💰 Remaining</p>
-                    <h2 id="dash-remain-usd" class="text-2xl font-black text-green-600">$0</h2>
-                    <p id="dash-remain-gbp" class="text-xs font-bold text-slate-400">£0</p>
-                </section>
+            <div class="flex items-center gap-2 mb-2 ml-2">
+                <span class="text-lg">📊</span>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Performance</p>
             </div>
+            <div id="regional-stats" class="space-y-4"></div>
 
-            <div class="mt-8">
-                <div class="flex items-center gap-2 mb-4 ml-1">
-                    <span class="text-lg">📍</span>
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Regional Health (Budget vs Actual)</p>
-                </div>
-                <div id="regional-stats" class="space-y-3">
-                    </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-[32px] shadow-lg border border-slate-100">
+            <div class="bg-white p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 border border-slate-100">
                 <div class="flex justify-between mb-3 items-center">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Budget Burn</span>
-                    <span id="burn-percent" class="bg-indigo-600 text-white px-2 py-1 rounded-lg text-[10px] font-black">0%</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Budget Burn</span>
+                    <span id="burn-percent" class="bg-slate-900 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-tighter">0%</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                    <div id="burn-progress" class="bg-indigo-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden p-1">
+                    <div id="burn-progress" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-indigo-600" style="width: 0%"></div>
                 </div>
             </div>
         </div>
 
         <div id="tab-content" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
-        <div id="admin-panel" class="hidden">
-            <section class="bg-white p-8 rounded-[40px] shadow-2xl border border-slate-50">
-                <div class="flex items-center gap-3 mb-8">
-                    <span class="text-2xl">⚙️</span>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Admin Control</h2>
-                </div>
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Trip Bankroll (£)</label>
-                        <div class="relative">
-                            <span class="absolute left-5 top-4 text-slate-400 font-bold text-xl">£</span>
+        <div id="admin-panel" class="hidden space-y-6">
+            <section class="bg-white p-8 rounded-[40px] shadow-2xl border border-slate-100">
+                <h2 class="text-xl font-black text-slate-800 mb-6">System Controls</h2>
+                
+                <div class="space-y-8">
+                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">1. Update Budget Plan</p>
+                        <div class="relative mb-4">
+                            <span class="absolute left-5 top-4 text-indigo-600 font-black text-xl">£</span>
                             <input type="number" id="input-gbp-limit" class="admin-input-premium" placeholder="5000">
                         </div>
+                        <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Apply Budget Updates</button>
                     </div>
-                    <button onclick="saveAdminSettings()" class="btn-gradient">
-                        Sync Changes & Update Dashboard
-                    </button>
-                    <p class="text-center text-[10px] text-slate-400 font-medium italic">Pushing this will recalculate all regional conversions and save to local storage.</p>
+
+                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">2. System Operations</p>
+                        <button onclick="systemSync()" class="btn-action bg-slate-900">
+                            Force Live Currency Sync
+                        </button>
+                    </div>
                 </div>
             </section>
         </div>
     </main>
 
-    <nav class="bottom-nav">
-        <div class="max-w-6xl mx-auto flex justify-around items-center h-full px-2">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-item">
+    <nav class="nav-container">
+        <div class="nav-wrapper">
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn">
                 <span class="nav-icon">🌴</span><span class="nav-text">LA</span>
             </button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-item">
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn">
                 <span class="nav-icon">🏔️</span><span class="nav-text">Utah</span>
             </button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-item">
-                <div class="home-circle-gradient">🏠</div>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center">
+                <span>🏠</span>
             </button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-item">
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn">
                 <span class="nav-icon">🎰</span><span class="nav-text">Vegas</span>
             </button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-item">
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn">
                 <span class="nav-icon">⚙️</span><span class="nav-text">Admin</span>
             </button>
         </div>
     </nav>
 
     <div id="modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 p-4 flex items-center justify-center">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+        <div class="modal-overlay absolute inset-0 bg-slate-900/40 backdrop-blur-md"></div>
         <div class="modal-container bg-white w-full max-w-md rounded-[48px] shadow-2xl z-50 overflow-hidden">
             <div class="p-8">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-black tracking-tight" id="modal-title">Edit Entry</h3>
-                    <button onclick="toggleModal()" class="bg-slate-100 p-2 rounded-full text-slate-400 hover:text-slate-900">✕</button>
+                    <h3 class="text-2xl font-black tracking-tight" id="modal-title">Edit</h3>
+                    <button onclick="toggleModal()" class="bg-slate-100 p-2 rounded-full text-slate-400">✕</button>
                 </div>
-                <div class="space-y-5">
+                <div class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="modal-label">Planned ($)</label>
-                            <input type="number" id="edit-usd" class="modal-input-premium">
+                        <div class="modal-field">
+                            <label>Plan ($)</label>
+                            <input type="number" id="edit-usd">
                         </div>
-                        <div>
-                            <label class="modal-label text-indigo-600">Spent ($)</label>
-                            <input type="number" id="edit-spent" class="modal-input-premium accent">
+                        <div class="modal-field">
+                            <label class="text-indigo-600">Spent ($)</label>
+                            <input type="number" id="edit-spent" class="bg-indigo-50 border-indigo-100">
                         </div>
                     </div>
-                    <div>
-                        <label class="modal-label">Notes</label>
-                        <textarea id="edit-activity" class="modal-input-premium text-sm" rows="2"></textarea>
+                    <div class="modal-field">
+                        <label>Notes</label>
+                        <textarea id="edit-activity" rows="2"></textarea>
                     </div>
-                    <button onclick="saveChanges()" class="btn-gradient mt-4">Save Entry</button>
+                    <button onclick="saveChanges()" class="btn-action bg-indigo-600">Save Entry</button>
                 </div>
             </div>
         </div>
@@ -148,7 +141,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.1') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.2') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -174,36 +167,54 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.1')) || defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.2')) || defaultData;
 
         async function init() {
+            await fetchRates();
+            document.getElementById('input-gbp-limit').value = bankrollGbp;
+            switchTab(currentTab);
+        }
+
+        async function fetchRates() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
                 exchangeRate = data.rates.USD;
                 document.getElementById('usd-rate').innerText = exchangeRate.toFixed(2);
-            } catch (e) { console.warn("Fallback rate used"); }
-            document.getElementById('input-gbp-limit').value = bankrollGbp;
-            switchTab(currentTab);
+            } catch (e) { console.warn("API Offline"); }
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.1', tabName);
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`nav-${tabName}`).classList.add('active');
+            localStorage.setItem('activeTab_v2.2', tabName);
+            
+            // Header Theme Logic
+            const header = document.getElementById('main-header');
+            header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
+            
+            // UI Toggles
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
             document.getElementById('view-title').innerText = (tabName === 'Home' ? 'Dashboard' : tabName);
             
-            const views = ['dashboard-view', 'tab-content', 'admin-panel'];
-            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+            const dash = document.getElementById('dashboard-view');
+            const grid = document.getElementById('tab-content');
+            const admin = document.getElementById('admin-panel');
+            const headStats = document.getElementById('header-stats');
+
+            dash.classList.add('hidden');
+            grid.classList.add('hidden');
+            admin.classList.add('hidden');
+            headStats.classList.add('hidden');
 
             if(tabName === 'Home') {
-                document.getElementById('dashboard-view').classList.remove('hidden');
+                dash.classList.remove('hidden');
+                headStats.classList.remove('hidden');
                 updateDashboard();
             } else if(tabName === 'Admin') {
-                document.getElementById('admin-panel').classList.remove('hidden');
+                admin.classList.remove('hidden');
             } else {
-                document.getElementById('tab-content').classList.remove('hidden');
+                grid.classList.remove('hidden');
                 renderGrid(tabName);
             }
         }
@@ -214,12 +225,9 @@
             const remainingUsd = limitUsd - totalActualUsd;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
 
-            document.getElementById('dash-goal-usd').innerText = `$${Math.round(limitUsd).toLocaleString()}`;
-            document.getElementById('dash-goal-gbp').innerText = `£${Math.round(bankrollGbp).toLocaleString()}`;
-            document.getElementById('dash-spent-usd').innerText = `$${Math.round(totalActualUsd).toLocaleString()}`;
-            document.getElementById('dash-spent-gbp').innerText = `£${Math.round(totalActualUsd / exchangeRate).toLocaleString()}`;
-            document.getElementById('dash-remain-usd').innerText = `$${Math.round(remainingUsd).toLocaleString()}`;
-            document.getElementById('dash-remain-gbp').innerText = `£${Math.round(remainingUsd / exchangeRate).toLocaleString()}`;
+            document.getElementById('stat-goal-usd').innerText = `$${Math.round(limitUsd)}`;
+            document.getElementById('stat-spent-usd').innerText = `$${Math.round(totalActualUsd)}`;
+            document.getElementById('stat-remain-usd').innerText = `$${Math.round(remainingUsd)}`;
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
@@ -231,34 +239,32 @@
                 const actualUsd = data.reduce((s, i) => s + i.spent, 0);
                 const diffUsd = plannedUsd - actualUsd;
                 
-                // Conversions
                 const plannedGbp = (plannedUsd / exchangeRate).toFixed(0);
                 const actualGbp = (actualUsd / exchangeRate).toFixed(0);
                 const diffGbp = (diffUsd / exchangeRate).toFixed(0);
 
-                const statusBg = actualUsd === 0 ? 'bg-white' : (diffUsd >= 0 ? 'bg-green-50' : 'bg-red-50');
-                const diffColor = diffUsd >= 0 ? 'text-green-600' : 'text-red-600';
+                const statusBorder = actualUsd === 0 ? 'border-slate-100' : (diffUsd >= 0 ? 'border-green-400' : 'border-red-400');
 
                 return `
-                <div class="${statusBg} p-5 rounded-[28px] shadow-sm border border-slate-100 flex flex-col gap-3">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <div class="bg-white p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center gap-2">
                             <span class="text-xl">${icon}</span>
-                            <p class="text-[11px] font-black text-slate-800 uppercase tracking-tighter">${loc}</p>
+                            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">${loc}</p>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Regional Left</p>
-                             <p class="text-xs font-black ${diffColor}">$${diffUsd} <span class="opacity-50 text-[10px]">/ £${diffGbp}</span></p>
+                             <p class="text-[8px] font-black text-slate-300 uppercase">Balance</p>
+                             <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600' : 'text-red-600'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${diffGbp}</span></p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-50 pt-3">
                         <div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Planned</p>
-                            <p class="text-sm font-bold text-slate-700">$${plannedUsd} <span class="text-[10px] text-slate-300">/ £${plannedGbp}</span></p>
+                            <p class="text-[8px] font-black text-slate-300 uppercase">Plan</p>
+                            <p class="text-xs font-bold">$${plannedUsd} <span class="text-[9px] text-slate-300">/ £${plannedGbp}</span></p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Spent</p>
-                            <p class="text-sm font-black text-indigo-600">$${actualUsd} <span class="text-[10px] text-indigo-300">/ £${actualGbp}</span></p>
+                            <p class="text-[8px] font-black text-slate-300 uppercase">Spent</p>
+                            <p class="text-xs font-black text-slate-900">$${actualUsd} <span class="text-[9px] text-slate-400">/ £${actualGbp}</span></p>
                         </div>
                     </div>
                 </div>`;
@@ -271,20 +277,20 @@
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
                 return `
-                <div class="trip-card-premium">
+                <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-[10px] font-black text-indigo-500 uppercase">${item.day}</span>
-                        <button onclick="openEdit(${globalIndex})" class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase">Update</button>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">${item.day}</span>
+                        <button onclick="openEdit(${globalIndex})" class="bg-slate-100 px-3 py-1 rounded-full text-[9px] font-black uppercase">Edit</button>
                     </div>
-                    <p class="text-[12px] text-slate-500 font-medium italic mb-4">"${item.activity}"</p>
-                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-[20px]">
+                    <p class="text-xs font-medium text-slate-500 mb-4 h-8 line-clamp-2 italic">"${item.activity}"</p>
+                    <div class="flex justify-between items-center bg-slate-50/50 p-4 rounded-2xl">
                         <div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase">Goal</p>
-                            <p class="text-lg font-black">$${item.usd}</p>
+                            <p class="text-[7px] font-black text-slate-300 uppercase">Plan</p>
+                            <p class="text-sm font-black text-slate-800">$${item.usd}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[8px] font-black text-indigo-400 uppercase">Actual</p>
-                            <p class="text-lg font-black text-indigo-600">$${item.spent}</p>
+                            <p class="text-[7px] font-black text-slate-300 uppercase">Actual</p>
+                            <p class="text-sm font-black text-indigo-600">$${item.spent}</p>
                         </div>
                     </div>
                 </div>`;
@@ -294,9 +300,18 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.1', JSON.stringify(tripData)); // Force save
+            localStorage.setItem('holidayBudget_v2.2', JSON.stringify(tripData));
             switchTab('Home');
-            alert("Success! Dashboard Updated.");
+            alert("✅ Budget Plan Updated!");
+        }
+
+        async function systemSync() {
+            const btn = event.target;
+            btn.innerText = "Syncing...";
+            await fetchRates();
+            btn.innerText = "Force Live Currency Sync";
+            updateDashboard();
+            alert("🚀 System Re-Synced with Live Rates!");
         }
 
         function openEdit(index) {
@@ -313,7 +328,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.1', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.2', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
@@ -325,7 +340,7 @@
         }
 
         init();
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
