@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.4.0</title>
+    <title>USA Trip Tracker v4.5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -95,7 +95,6 @@
 
         <div id="tab-content-container" class="hidden">
             <div id="location-fuel-container"></div>
-            
             <div id="tab-content" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6"></div>
         </div>
 
@@ -129,9 +128,17 @@
                         <button onclick="systemSync()" class="btn-action bg-slate-800 dark:bg-slate-200 dark:text-slate-900 text-[10px]">
                             🔄 Fetch Live Currency
                         </button>
-                        <button onclick="forceAppUpdate()" class="btn-action bg-rose-500 text-[10px]">
+                        <button onclick="forceAppUpdate()" class="btn-action bg-slate-500 text-[10px]">
                             ⚡ Force App Version Update
                         </button>
+                    </div>
+
+                    <div class="p-6 bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/30 mt-6">
+                        <p class="text-[10px] font-black text-red-500 uppercase mb-4 tracking-widest text-center">Danger Zone</p>
+                        <button onclick="factoryReset()" class="btn-action bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20">
+                            ⚠️ Factory Reset Data
+                        </button>
+                        <p class="text-center text-[9px] text-red-400 font-bold uppercase tracking-widest mt-3">Wipes inputs. Restores default itinerary.</p>
                     </div>
                 </div>
             </section>
@@ -212,17 +219,15 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div class="flex gap-3">
-                        <div class="w-1/2 modal-field">
-                            <label class="text-slate-400">Date</label>
-                            <input type="date" id="new-fuel-date" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 font-bold text-white outline-none">
-                        </div>
-                        <div class="w-1/2 modal-field">
-                            <label class="text-slate-400">Amount ($)</label>
-                            <input type="number" id="new-fuel-usd" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 font-black text-emerald-400 outline-none">
-                        </div>
+                    <div class="modal-field">
+                        <label class="text-slate-400">Date of Fill-up</label>
+                        <input type="date" id="new-fuel-date" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 font-bold text-white outline-none">
                     </div>
-                    <button onclick="addLocalFuel()" class="btn-action bg-indigo-500 hover:bg-indigo-400">Add Fuel Entry</button>
+                    <div class="modal-field">
+                        <label class="text-slate-400">Amount Spent ($)</label>
+                        <input type="number" id="new-fuel-usd" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 font-black text-emerald-400 outline-none text-xl">
+                    </div>
+                    <button onclick="addLocalFuel()" class="btn-action bg-indigo-500 hover:bg-indigo-400 mt-2">Add Fuel Entry</button>
                     <p class="text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">Does not deduct from cash budget</p>
                 </div>
             </div>
@@ -268,12 +273,13 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.4') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.5') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
         let editingFuelLoc = null;
 
+        // Pristine Default Data for Factory Reset
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
             { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", cat: "🎢 Fun", usd: 500, spent: 0 },
@@ -296,12 +302,13 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.4')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v4.3')) || 
-                       defaultData;
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.5')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.4')) || 
+                       JSON.parse(JSON.stringify(defaultData));
+        tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.4')) || 
-                          JSON.parse(localStorage.getItem('holidayFuel_v4.3')) || [];
+        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.5')) || 
+                          JSON.parse(localStorage.getItem('holidayFuel_v4.4')) || [];
 
         async function init() {
             applyTheme();
@@ -349,7 +356,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.4', tabName);
+            localStorage.setItem('activeTab_v4.5', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -578,10 +585,11 @@
             }).join('');
         }
 
+        // SYSTEM ADMIN
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.4', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -593,12 +601,33 @@
         }
 
         function forceAppUpdate() {
-            if(confirm("Force App Update?")) {
+            if(confirm("Force App Update? This clears the cache to pull new code.")) {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
                 }
                 caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
                       .then(() => window.location.reload(true));
+            }
+        }
+
+        // NEW: FACTORY RESET
+        function factoryReset() {
+            if(confirm("⚠️ WARNING: This will wipe ALL your entered spent amounts, fuel logs, and custom notes. The itinerary will be reset to the original template. Are you absolutely sure?")) {
+                
+                // Discard old versions
+                localStorage.removeItem('holidayBudget_v4.5');
+                localStorage.removeItem('holidayFuel_v4.5');
+                
+                // Deep clone the pristine default array so we don't mutate references
+                tripData = JSON.parse(JSON.stringify(defaultData));
+                fuelEntries = [];
+                
+                // Save the clean slate
+                localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
+                localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
+                
+                alert("✅ Data has been reset to factory defaults.");
+                window.location.reload(true);
             }
         }
 
@@ -640,7 +669,7 @@
             if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
             fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-            localStorage.setItem('holidayFuel_v4.4', JSON.stringify(fuelEntries));
+            localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
             
             document.getElementById('new-fuel-usd').value = '';
             renderLocalFuelList(editingFuelLoc);
@@ -650,7 +679,7 @@
         function deleteFuelEntry(id) {
             if(confirm("Remove this fuel entry?")) {
                 fuelEntries = fuelEntries.filter(e => e.id !== id);
-                localStorage.setItem('holidayFuel_v4.4', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
                 
                 if(editingFuelLoc) {
                     renderLocalFuelList(editingFuelLoc);
@@ -693,6 +722,7 @@
         }
 
         function openGlobalFuelModal() {
+            editingFuelLoc = null; // We are in global mode
             renderGlobalFuelList();
             toggleGlobalFuelModal(true);
         }
@@ -708,6 +738,7 @@
             }
         }
 
+        // ACTIVITY EDIT LOGIC
         function openEdit(index) {
             editingIndex = index;
             const item = tripData[index];
@@ -728,7 +759,7 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.4', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
 
             if(spent > usd && usd > 0) {
                 const modalCard = document.getElementById('modal-card');
