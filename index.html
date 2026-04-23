@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>USA Trip Tracker v2.3.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>USA Trip Tracker v2.4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -144,7 +144,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.3') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.4') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -170,7 +170,10 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.3')) || defaultData;
+        // Developer Magic: Pull data from the previous version so you don't lose your work!
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.4')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v2.3')) || 
+                       defaultData;
 
         async function init() {
             await fetchRates();
@@ -189,7 +192,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.3', tabName);
+            localStorage.setItem('activeTab_v2.4', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -278,8 +281,6 @@
             
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
-                
-                // Holiday Ticket Design Logic
                 return `
                 <div class="ticket-card">
                     <div class="p-5 pb-4">
@@ -312,7 +313,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.3', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.4', JSON.stringify(tripData));
             switchTab('Home');
             alert("✅ Budget Plan Updated!");
         }
@@ -327,7 +328,7 @@
         }
 
         function forceAppUpdate() {
-            if(confirm("This will unregister the Service Worker and force the browser to pull the absolute newest version of the app files. Proceed?")) {
+            if(confirm("This will unregister the Service Worker and pull the absolute newest version. Proceed?")) {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(function(registrations) {
                         for(let registration of registrations) {
@@ -340,7 +341,7 @@
                         return caches.delete(key);
                     }));
                 }).then(() => {
-                    alert("Cache cleared. The app will now hard refresh.");
+                    alert("Cache cleared! The app will now hard refresh.");
                     window.location.reload(true);
                 });
             }
@@ -360,7 +361,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.3', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.4', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
