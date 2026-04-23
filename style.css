@@ -41,7 +41,6 @@
 .nav-container {
     position: fixed;
     bottom: 25px;
-    /* Adding safe-area support for iOS home indicator */
     bottom: calc(25px + env(safe-area-inset-bottom));
     left: 20px;
     right: 20px;
@@ -125,13 +124,7 @@
     outline: none;
 }
 
-/* SCROLL AND SAFE AREA FIXES (Overriding Tailwind if necessary) */
+/* SCROLL AND SAFE AREA FIXES */
 .no-scrollbar::-webkit-scrollbar { display: none; }
-
-/* The fix for the bottom card getting covered by the floating nav */
-.safe-bottom { 
-    /* Massive padding base + device specific safe-area buffer */
-    padding-bottom: calc(160px + env(safe-area-inset-bottom)) !important; 
-}
-
+.safe-bottom { padding-bottom: calc(160px + env(safe-area-inset-bottom)) !important; }
 body.modal-active { overflow: hidden; }
