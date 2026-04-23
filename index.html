@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v2.5.0</title>
+    <title>USA Trip Tracker v2.6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -13,7 +13,7 @@
 <body class="bg-slate-50 text-slate-900 no-scrollbar">
 
     <header id="main-header" class="theme-home sticky top-0 z-30 transition-all duration-500">
-        <div class="max-w-6xl mx-auto p-6">
+        <div class="max-w-6xl mx-auto p-6 pb-5">
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
@@ -27,16 +27,19 @@
             
             <div id="header-stats" class="grid grid-cols-3 gap-3">
                 <div class="header-stat-pill">
-                    <p class="stat-label">Goal</p>
+                    <p class="stat-label">Budget</p>
                     <p id="stat-goal-usd" class="stat-val">$0</p>
+                    <p id="stat-goal-gbp" class="stat-val-sub">£0</p>
                 </div>
                 <div class="header-stat-pill">
                     <p class="stat-label">Spent</p>
                     <p id="stat-spent-usd" class="stat-val text-orange-200">$0</p>
+                    <p id="stat-spent-gbp" class="stat-val-sub text-orange-200/70">£0</p>
                 </div>
                 <div id="remain-pill" class="header-stat-pill bg-white/30 border-white/50 transition-colors">
-                    <p class="stat-label">Left</p>
+                    <p class="stat-label">Balance</p>
                     <p id="stat-remain-usd" class="stat-val">$0</p>
+                    <p id="stat-remain-gbp" class="stat-val-sub">£0</p>
                 </div>
             </div>
         </div>
@@ -144,7 +147,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.5') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.6') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -171,9 +174,9 @@
         ];
 
         // Ensure data isn't lost during updates
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.5')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.6')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v2.5')) || 
                        JSON.parse(localStorage.getItem('holidayBudget_v2.4')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v2.3')) || 
                        defaultData;
 
         async function init() {
@@ -193,7 +196,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.5', tabName);
+            localStorage.setItem('activeTab_v2.6', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -225,31 +228,40 @@
                     grid.classList.remove('hidden');
                     renderGrid(tabName);
                 }
-                updateHeaderStats(tabName); // Updates sticky header dynamically
+                updateHeaderStats(tabName); 
             }
         }
 
-        // NEW: Context-Aware Header Stats
         function updateHeaderStats(tabName) {
-            let planned = 0, spent = 0, left = 0;
+            let plannedUsd = 0, spentUsd = 0, leftUsd = 0;
             
             if (tabName === 'Home') {
-                spent = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
-                planned = bankrollGbp * exchangeRate;
-                left = planned - spent;
+                spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+                plannedUsd = bankrollGbp * exchangeRate;
+                leftUsd = plannedUsd - spentUsd;
             } else {
                 const locData = tripData.filter(d => d.loc === tabName);
-                planned = locData.reduce((s, i) => s + (parseFloat(i.usd) || 0), 0);
-                spent = locData.reduce((s, i) => s + (parseFloat(i.spent) || 0), 0);
-                left = planned - spent;
+                plannedUsd = locData.reduce((s, i) => s + (parseFloat(i.usd) || 0), 0);
+                spentUsd = locData.reduce((s, i) => s + (parseFloat(i.spent) || 0), 0);
+                leftUsd = plannedUsd - spentUsd;
             }
 
-            document.getElementById('stat-goal-usd').innerText = `$${Math.round(planned)}`;
-            document.getElementById('stat-spent-usd').innerText = `$${Math.round(spent)}`;
-            document.getElementById('stat-remain-usd').innerText = `$${Math.round(left)}`;
+            const plannedGbp = plannedUsd / exchangeRate;
+            const spentGbp = spentUsd / exchangeRate;
+            const leftGbp = leftUsd / exchangeRate;
+
+            // USD primary
+            document.getElementById('stat-goal-usd').innerText = `$${Math.round(plannedUsd)}`;
+            document.getElementById('stat-spent-usd').innerText = `$${Math.round(spentUsd)}`;
+            document.getElementById('stat-remain-usd').innerText = `$${Math.round(leftUsd)}`;
+            
+            // GBP secondary
+            document.getElementById('stat-goal-gbp').innerText = `£${Math.round(plannedGbp)}`;
+            document.getElementById('stat-spent-gbp').innerText = `£${Math.round(spentGbp)}`;
+            document.getElementById('stat-remain-gbp').innerText = `£${Math.round(leftGbp)}`;
             
             const pill = document.getElementById('remain-pill');
-            if (left < 0) {
+            if (leftUsd < 0) {
                 pill.className = "header-stat-pill bg-rose-500/90 border-rose-400 transition-colors";
             } else {
                 pill.className = "header-stat-pill bg-white/30 border-white/50 transition-colors";
@@ -342,7 +354,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.5', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.6', JSON.stringify(tripData));
             switchTab('Home');
             alert("✅ Budget Plan Updated!");
         }
@@ -391,7 +403,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.5', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.6', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
