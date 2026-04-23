@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.2.0</title>
+    <title>USA Trip Tracker v4.3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -50,16 +50,18 @@
         
         <div id="dashboard-view" class="space-y-6">
             
-            <div class="bg-slate-800 dark:bg-slate-900 p-6 rounded-[35px] shadow-xl mt-2 relative overflow-hidden border border-slate-700">
-                <div class="absolute -right-2 -top-4 text-8xl opacity-10 transform rotate-12">💳</div>
+            <div onclick="openGlobalFuelModal()" class="bg-slate-800 dark:bg-slate-900 p-6 rounded-[35px] shadow-xl mt-2 relative overflow-hidden border border-slate-700 cursor-pointer active:scale-[0.98] transition-transform">
+                <div class="absolute -right-2 -top-4 text-8xl opacity-10 transform rotate-12">⛽</div>
                 <div class="flex justify-between mb-1 items-start relative z-10">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">💳 Credit Card Ledger</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        ⛽ Holiday Fuel <span class="bg-slate-700 text-white px-2 py-0.5 rounded text-[8px]">TAP TO VIEW LOG</span>
+                    </span>
                 </div>
                 <div class="flex justify-between items-end relative z-10 mt-2">
                     <h2 id="fuel-usd" class="text-4xl font-black text-white">$0</h2>
                     <h3 id="fuel-gbp" class="text-lg font-bold text-slate-400">£0</h3>
                 </div>
-                <p class="text-[9px] text-slate-500 font-medium mt-2 relative z-10 uppercase tracking-widest">Hire Car Fuel (Tracked Separately)</p>
+                <p class="text-[9px] text-slate-500 font-medium mt-2 relative z-10 uppercase tracking-widest">Combined from all regions</p>
             </div>
 
             <div class="surface-card p-6 rounded-[35px] shadow-lg shadow-indigo-100/50 border-surface border">
@@ -108,7 +110,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" id="dark-mode-toggle" class="sr-only peer" onchange="toggleDarkMode()">
-                          <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                          <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
 
@@ -185,22 +187,78 @@
         </div>
     </div>
 
-    <div id="fuel-modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleFuelModal(false)"></div>
+    <div id="local-fuel-modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleLocalFuelModal(false)"></div>
         <div class="modal-content-sheet bg-slate-800 w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-700">
             <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mt-4 mb-2 sm:hidden"></div>
             <div class="p-8 pt-4">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-black tracking-tight text-white" id="fuel-modal-title">Credit Card Entry</h3>
-                    <button onclick="toggleFuelModal(false)" class="bg-slate-700 p-2 rounded-full text-slate-300 hover:text-white transition-colors">✕</button>
+                    <h3 class="text-2xl font-black tracking-tight text-white" id="local-fuel-modal-title">Hire Car Fuel</h3>
+                    <button onclick="toggleLocalFuelModal(false)" class="bg-slate-700 p-2 rounded-full text-slate-300 hover:text-white transition-colors">✕</button>
                 </div>
-                <div class="space-y-5">
-                    <div class="modal-field">
-                        <label class="text-slate-400">Hire Car Fuel ($)</label>
-                        <input type="number" id="edit-fuel-usd" class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-4 font-black text-white outline-none text-xl">
+                
+                <div class="bg-slate-900 rounded-2xl p-4 mb-6 border border-slate-700 max-h-48 overflow-y-auto no-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="text-[9px] uppercase font-black text-slate-500 border-b border-slate-700">
+                            <tr><th class="pb-2">Date</th><th class="pb-2 text-right">Amount ($)</th><th class="pb-2"></th></tr>
+                        </thead>
+                        <tbody id="local-fuel-list" class="divide-y divide-slate-800/50">
+                            </tbody>
+                        <tfoot class="border-t border-slate-600 font-black text-white">
+                            <tr><td class="pt-2 text-right text-[10px] uppercase text-slate-400">Total</td><td class="pt-2 text-right" id="local-fuel-total">$0</td><td></td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="w-1/2 modal-field">
+                            <label class="text-slate-400">Date</label>
+                            <input type="date" id="new-fuel-date" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 font-bold text-white outline-none">
+                        </div>
+                        <div class="w-1/2 modal-field">
+                            <label class="text-slate-400">Amount ($)</label>
+                            <input type="number" id="new-fuel-usd" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 font-black text-emerald-400 outline-none">
+                        </div>
                     </div>
-                    <button onclick="saveFuel()" class="btn-action bg-indigo-500 hover:bg-indigo-400 mt-2">Save to Ledger</button>
-                    <p class="text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">This does not deduct from your cash budget.</p>
+                    <button onclick="addLocalFuel()" class="btn-action bg-indigo-500 hover:bg-indigo-400">Add Fuel Entry</button>
+                    <p class="text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2">Does not deduct from cash budget</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="global-fuel-modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleGlobalFuelModal(false)"></div>
+        <div class="modal-content-sheet bg-slate-800 w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-700">
+            <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mt-4 mb-2 sm:hidden"></div>
+            <div class="p-8 pt-4">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-black tracking-tight text-white">All Holiday Fuel</h3>
+                        <p class="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Master Ledger</p>
+                    </div>
+                    <button onclick="toggleGlobalFuelModal(false)" class="bg-slate-700 p-2 rounded-full text-slate-300 hover:text-white transition-colors">✕</button>
+                </div>
+                
+                <div class="bg-slate-900 rounded-2xl p-4 mb-2 border border-slate-700 max-h-[50vh] overflow-y-auto no-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="text-[9px] uppercase font-black text-slate-500 border-b border-slate-700 sticky top-0 bg-slate-900">
+                            <tr><th class="pb-2">Date</th><th class="pb-2">Loc</th><th class="pb-2 text-right">Amount ($)</th></tr>
+                        </thead>
+                        <tbody id="global-fuel-list" class="divide-y divide-slate-800/50">
+                            </tbody>
+                        <tfoot class="border-t border-slate-600 font-black text-white bg-slate-900 sticky bottom-0">
+                            <tr>
+                                <td colspan="2" class="pt-3 pb-1 text-right text-[10px] uppercase text-slate-400 pr-4">Grand Total</td>
+                                <td class="pt-3 pb-1 text-right text-emerald-400 text-lg" id="global-fuel-total">$0</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="pb-2 text-right text-[9px] uppercase text-slate-500 pr-4">Est. GBP</td>
+                                <td class="pb-2 text-right text-slate-400 text-xs" id="global-fuel-total-gbp">£0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
         </div>
@@ -209,12 +267,13 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.2') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.3') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
         let editingFuelLoc = null;
 
+        // Trip Data
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
             { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", cat: "🎢 Fun", usd: 500, spent: 0 },
@@ -237,15 +296,24 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.2')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v4.1')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.3')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.2')) || 
                        defaultData;
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-        // FUEL DATA (Ghost Ledger)
-        let fuelData = JSON.parse(localStorage.getItem('holidayFuel_v4.2')) || 
-                       JSON.parse(localStorage.getItem('holidayFuel_v4.1')) || 
-                       { 'LA': 0, 'Utah': 0, 'Vegas': 0 };
+        // FUEL DATA (Array format for v4.3)
+        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.3')) || [];
+        
+        // Migration from v4.2 object format to v4.3 array format
+        if (fuelEntries.length === 0) {
+            let oldFuel = JSON.parse(localStorage.getItem('holidayFuel_v4.2'));
+            if (oldFuel && !Array.isArray(oldFuel)) {
+                Object.entries(oldFuel).forEach(([loc, amt]) => {
+                    if (amt > 0) fuelEntries.push({ id: Date.now() + Math.random(), loc: loc, date: "Imported", usd: amt });
+                });
+                localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
+            }
+        }
 
         async function init() {
             applyTheme();
@@ -293,7 +361,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.2', tabName);
+            localStorage.setItem('activeTab_v4.3', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -325,7 +393,7 @@
         function updateHeaderStats(tabName) {
             let plannedUsd = 0, spentUsd = 0, leftUsd = 0;
             
-            // FUEL IS NO LONGER DEDUCTED HERE
+            // Fuel completely isolated from header stats
             if (tabName === 'Home') {
                 spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
                 plannedUsd = bankrollGbp * exchangeRate;
@@ -351,7 +419,7 @@
         }
 
         function updateDashboard() {
-            // Core Stats (Fuel is NOT in totalActualUsd)
+            // Core Stats (Fuel isolated)
             const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
             const limitUsd = bankrollGbp * exchangeRate;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
@@ -359,12 +427,12 @@
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
-            // Fuel Card Update (Ghost Ledger)
-            const totalGlobalFuel = Object.values(fuelData).reduce((a, b) => a + b, 0);
+            // Dashboard Fuel Card
+            const totalGlobalFuel = fuelEntries.reduce((s, e) => s + e.usd, 0);
             animateValue('fuel-usd', Math.round(totalGlobalFuel));
             document.getElementById('fuel-gbp').innerText = `£${Math.round(totalGlobalFuel / exchangeRate)}`;
 
-            // Spending Insights (Does not include Fuel)
+            // Spending Insights
             const catColors = { '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
             let catTotals = {};
             tripData.forEach(i => { if(i.spent > 0) catTotals[i.cat] = (catTotals[i.cat] || 0) + i.spent; });
@@ -390,7 +458,7 @@
             document.getElementById('insights-bar').innerHTML = insightsBarHtml;
             document.getElementById('insights-legend').innerHTML = insightsLegendHtml;
 
-            // Regional Health (No Fuel)
+            // Regional Health
             const locs = { 'LA': '🌴', 'Utah': '🏔️', 'Vegas': '🎰' };
             const regionalContainer = document.getElementById('regional-stats');
             regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon]) => {
@@ -432,34 +500,31 @@
             }).join('');
         }
 
-        let touchStartX = 0;
-        let touchEndX = 0;
-        function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
-        function handleTouchEnd(e, index) {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 60) openEdit(index); 
-        }
-
         function renderGrid(filter) {
             const fuelContainer = document.getElementById('location-fuel-container');
             const grid = document.getElementById('tab-content');
             
+            // Location Specific Fuel Total
+            const locFuelTotal = fuelEntries.filter(e => e.loc === filter).reduce((s, e) => s + e.usd, 0);
+
             // Inject Static Fuel Pill at Top
             fuelContainer.innerHTML = `
-                <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-md flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors mb-6">
+                <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-md flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors mb-6 cursor-pointer active:scale-95" onclick="openFuelEdit('${filter}')">
                     <div class="flex items-center gap-3">
-                        <div class="bg-slate-700 p-3 rounded-2xl text-2xl shadow-inner">💳</div>
+                        <div class="bg-slate-700 p-3 rounded-2xl text-2xl shadow-inner">⛽</div>
                         <div>
                             <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Hire Car Fuel</p>
-                            <p class="text-sm font-bold text-white">Credit Card</p>
+                            <p class="text-sm font-bold text-white">Log & Add</p>
                         </div>
                     </div>
                     <div class="text-right flex items-center gap-4">
                         <div>
-                            <p class="text-2xl font-black text-white leading-none">$${fuelData[filter] || 0}</p>
-                            <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">£${((fuelData[filter] || 0)/exchangeRate).toFixed(0)}</p>
+                            <p class="text-2xl font-black text-white leading-none">$${locFuelTotal}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">£${(locFuelTotal/exchangeRate).toFixed(0)}</p>
                         </div>
-                        <button onclick="openFuelEdit('${filter}')" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase transition-colors shadow-lg">Add</button>
+                        <div class="bg-indigo-500 text-white p-2 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        </div>
                     </div>
                 </div>
             `;
@@ -467,7 +532,6 @@
             const data = tripData.filter(d => d.loc === filter);
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
-                
                 let dayName = "Day", dayNum = "00", month = "MTH";
                 if(item.day.includes(' ')) {
                     const parts = item.day.split(' ');
@@ -476,9 +540,7 @@
                         const dParts = parts[1].split('-');
                         dayNum = dParts[0];
                         month = dParts[1];
-                    } else {
-                        dayNum = parts[1];
-                    }
+                    } else { dayNum = parts[1]; }
                 }
 
                 return `
@@ -527,10 +589,11 @@
             }).join('');
         }
 
+        // ADMIN LOGIC
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.2', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.3', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -551,23 +614,116 @@
             }
         }
 
-        // FUEL LOGIC
+        // FUEL LOGIC (Tabular)
+        function renderLocalFuelList(loc) {
+            const listData = fuelEntries.filter(e => e.loc === loc);
+            const total = listData.reduce((s, e) => s + e.usd, 0);
+            
+            const tbody = document.getElementById('local-fuel-list');
+            if (listData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-500 text-xs">No entries yet.</td></tr>`;
+            } else {
+                tbody.innerHTML = listData.map(e => `
+                    <tr>
+                        <td class="py-2.5 font-medium">${e.date}</td>
+                        <td class="py-2.5 text-right font-black text-white">$${e.usd}</td>
+                        <td class="py-2.5 text-right pl-2">
+                            <button onclick="deleteFuelEntry(${e.id})" class="text-rose-500 hover:text-rose-400">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById('local-fuel-total').innerText = `$${total}`;
+        }
+
         function openFuelEdit(loc) {
             editingFuelLoc = loc;
-            document.getElementById('fuel-modal-title').innerText = `${loc} Credit Card`;
-            document.getElementById('edit-fuel-usd').value = fuelData[loc] || 0;
-            toggleFuelModal(true);
+            document.getElementById('local-fuel-modal-title').innerText = `${loc} Fuel Log`;
+            
+            // Pre-fill date with today
+            document.getElementById('new-fuel-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('new-fuel-usd').value = '';
+            
+            renderLocalFuelList(loc);
+            toggleLocalFuelModal(true);
         }
 
-        function saveFuel() {
-            fuelData[editingFuelLoc] = parseFloat(document.getElementById('edit-fuel-usd').value) || 0;
-            localStorage.setItem('holidayFuel_v4.2', JSON.stringify(fuelData));
-            toggleFuelModal(false);
-            switchTab(currentTab);
+        function addLocalFuel() {
+            const dateVal = document.getElementById('new-fuel-date').value || "Undated";
+            const amtVal = parseFloat(document.getElementById('new-fuel-usd').value);
+            
+            if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
+
+            fuelEntries.push({
+                id: Date.now(),
+                loc: editingFuelLoc,
+                date: dateVal,
+                usd: amtVal
+            });
+            
+            localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
+            
+            document.getElementById('new-fuel-usd').value = '';
+            renderLocalFuelList(editingFuelLoc);
+            
+            // Background update UI
+            renderGrid(editingFuelLoc);
         }
 
-        function toggleFuelModal(show) {
-            const m = document.getElementById('fuel-modal');
+        function deleteFuelEntry(id) {
+            if(confirm("Remove this fuel entry?")) {
+                fuelEntries = fuelEntries.filter(e => e.id !== id);
+                localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
+                
+                // Re-render wherever we are
+                if(editingFuelLoc) {
+                    renderLocalFuelList(editingFuelLoc);
+                    renderGrid(editingFuelLoc);
+                } else {
+                    renderGlobalFuelList();
+                    updateDashboard();
+                }
+            }
+        }
+
+        function toggleLocalFuelModal(show) {
+            const m = document.getElementById('local-fuel-modal');
+            if (show) {
+                m.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
+            } else {
+                m.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
+            }
+        }
+
+        // GLOBAL FUEL LOGIC
+        function renderGlobalFuelList() {
+            const total = fuelEntries.reduce((s, e) => s + e.usd, 0);
+            const tbody = document.getElementById('global-fuel-list');
+            
+            if (fuelEntries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-500 text-xs">No holiday fuel logged yet.</td></tr>`;
+            } else {
+                tbody.innerHTML = fuelEntries.map(e => `
+                    <tr>
+                        <td class="py-3 font-medium text-[10px] leading-tight">${e.date}<br><button onclick="deleteFuelEntry(${e.id})" class="text-rose-500 text-[10px]">Delete</button></td>
+                        <td class="py-3 font-black text-slate-400 uppercase text-[10px]">${e.loc}</td>
+                        <td class="py-3 text-right font-black text-white">$${e.usd}</td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById('global-fuel-total').innerText = `$${total}`;
+            document.getElementById('global-fuel-total-gbp').innerText = `£${(total/exchangeRate).toFixed(0)}`;
+        }
+
+        function openGlobalFuelModal() {
+            renderGlobalFuelList();
+            toggleGlobalFuelModal(true);
+        }
+
+        function toggleGlobalFuelModal(show) {
+            const m = document.getElementById('global-fuel-modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
                 document.body.classList.add('modal-active');
@@ -598,7 +754,7 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.2', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.3', JSON.stringify(tripData));
 
             if(spent > usd && usd > 0) {
                 const modalCard = document.getElementById('modal-card');
