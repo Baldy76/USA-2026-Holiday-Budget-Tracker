@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v3.0.0</title>
+    <title>USA Trip Tracker v3.1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -111,21 +111,11 @@
 
     <nav class="nav-container">
         <div class="nav-wrapper">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn">
-                <span class="nav-icon">🌴</span><span class="nav-text">LA</span>
-            </button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn">
-                <span class="nav-icon">🏔️</span><span class="nav-text">Utah</span>
-            </button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center">
-                <span>🏠</span>
-            </button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn">
-                <span class="nav-icon">🎰</span><span class="nav-text">Vegas</span>
-            </button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn">
-                <span class="nav-icon">⚙️</span><span class="nav-text">Admin</span>
-            </button>
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn"><span class="nav-icon">🌴</span><span class="nav-text">LA</span></button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn"><span class="nav-icon">🏔️</span><span class="nav-text">Utah</span></button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center"><span>🏠</span></button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn"><span class="nav-icon">🎰</span><span class="nav-text">Vegas</span></button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn"><span class="nav-icon">⚙️</span><span class="nav-text">Admin</span></button>
         </div>
     </nav>
 
@@ -174,12 +164,11 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v3.0') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v3.1') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
 
-        // Upgraded Data Structure with Categories
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
             { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", cat: "🎢 Fun", usd: 500, spent: 0 },
@@ -202,11 +191,10 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v3.0')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v2.7')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v3.1')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v3.0')) || 
                        defaultData;
 
-        // Backwards compatibility for older data missing categories
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
         async function init() {
@@ -237,7 +225,6 @@
             } catch (e) { console.warn("API Offline"); }
         }
 
-        // Slot Machine Animation
         function animateValue(objId, end, duration = 1000) {
             const obj = document.getElementById(objId);
             if(!obj) return;
@@ -245,22 +232,18 @@
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                // Ease out function
                 const easeOut = 1 - Math.pow(1 - progress, 3);
                 const currentVal = Math.floor(easeOut * end);
                 obj.innerText = `$${currentVal}`;
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    obj.innerText = `$${end}`;
-                }
+                if (progress < 1) window.requestAnimationFrame(step);
+                else obj.innerText = `$${end}`;
             };
             window.requestAnimationFrame(step);
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v3.0', tabName);
+            localStorage.setItem('activeTab_v3.1', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -358,14 +341,13 @@
             }).join('');
         }
 
-        // SWIPE LOGIC
         let touchStartX = 0;
         let touchEndX = 0;
 
         function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
         function handleTouchEnd(e, index) {
             touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 60) openEdit(index); // Swiped left
+            if (touchStartX - touchEndX > 60) openEdit(index); 
         }
 
         function renderGrid(filter) {
@@ -374,33 +356,59 @@
             
             grid.innerHTML = data.map((item) => {
                 const globalIndex = tripData.findIndex(d => d.day === item.day);
+                
+                // Parse "Mon 20-Jul" into Calendar Stub
+                let dayName = "Day", dayNum = "00", month = "MTH";
+                if(item.day.includes(' ')) {
+                    const parts = item.day.split(' ');
+                    dayName = parts[0];
+                    if(parts[1] && parts[1].includes('-')) {
+                        const dParts = parts[1].split('-');
+                        dayNum = dParts[0];
+                        month = dParts[1];
+                    } else {
+                        dayNum = parts[1];
+                    }
+                }
+
                 return `
                 <div class="ticket-card surface-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
                     <div class="absolute inset-y-0 right-0 bg-indigo-500 w-16 rounded-r-[32px] flex items-center justify-center -z-10 opacity-0 transition-opacity">
                         <span class="text-white text-xs font-bold -rotate-90 tracking-widest">EDIT</span>
                     </div>
-                    <div class="ticket-content bg-surface rounded-[32px] transition-transform">
-                        <div class="p-5 pb-4">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm">${item.day}</span>
-                                <span class="bg-surface-alt text-mute px-3 py-1 rounded-full text-[9px] font-black tracking-widest border border-surface">${item.cat}</span>
-                            </div>
-                            <p class="text-sm font-bold text-primary leading-snug line-clamp-2 min-h-[40px]">"${item.activity}"</p>
-                        </div>
+                    <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col">
                         
-                        <div class="relative border-t-2 border-dashed border-surface-alt mx-4">
-                            <div class="absolute -left-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full"></div>
-                            <div class="absolute -right-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full"></div>
+                        <div class="p-4 flex gap-4 items-center relative">
+                            <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-lg shadow-indigo-500/30 text-white">
+                                <p class="text-[8px] font-black uppercase opacity-80">${month}</p>
+                                <p class="text-2xl font-black leading-none my-0.5 tracking-tighter">${dayNum}</p>
+                                <p class="text-[8px] font-black uppercase opacity-80">${dayName}</p>
+                            </div>
+                            
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start mb-1.5">
+                                    <span class="bg-surface-alt text-mute px-2 py-0.5 rounded-md text-[8px] font-black tracking-widest border border-surface">${item.cat}</span>
+                                    <button onclick="openEdit(${globalIndex})" class="text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
+                                    </button>
+                                </div>
+                                <p class="text-sm font-bold text-primary leading-tight line-clamp-2">"${item.activity}"</p>
+                            </div>
                         </div>
 
-                        <div class="p-5 pt-4 bg-surface-alt rounded-b-[32px] grid grid-cols-2 gap-4 items-center">
+                        <div class="relative border-t-2 border-dashed border-surface-alt mx-4">
+                            <div class="absolute -left-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-surface-alt"></div>
+                            <div class="absolute -right-6 -top-2 w-4 h-4 bg-slate-50 dark:bg-slate-900 rounded-full border border-surface-alt"></div>
+                        </div>
+
+                        <div class="p-4 bg-surface-alt rounded-b-[32px] grid grid-cols-2 gap-4 items-center">
                             <div>
-                                <span class="inline-block bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1">Goal Plan</span>
-                                <p class="text-xl font-black text-primary">$${item.usd}</p>
+                                <span class="inline-block bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-0.5">Goal Plan</span>
+                                <p class="text-lg font-black text-primary">$${item.usd}</p>
                             </div>
                             <div class="text-right border-l border-surface pl-4">
-                                <span class="inline-block bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1">Actual Spend</span>
-                                <p class="text-xl font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
+                                <span class="inline-block bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-0.5">Actual Spend</span>
+                                <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
                             </div>
                         </div>
                     </div>
@@ -411,7 +419,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v3.0', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v3.1', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -448,7 +456,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v3.0', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v3.1', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
