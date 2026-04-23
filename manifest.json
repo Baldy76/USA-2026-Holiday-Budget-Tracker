@@ -1,11 +1,11 @@
 {
   "name": "Holiday Budget",
   "short_name": "TripBudget",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#4338ca",
-  "theme_color": "#4338ca",
+  "background_color": "#1e1b4b",
+  "theme_color": "#1e1b4b",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2534/2534204.png",
