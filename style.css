@@ -18,10 +18,15 @@
     border-radius: 20px;
     padding: 10px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .stat-label { font-size: 8px; font-weight: 900; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 2px; }
-.stat-val { font-size: 16px; font-weight: 900; color: white; }
+.stat-val { font-size: 16px; font-weight: 900; color: white; line-height: 1.1; }
+/* New Dual Currency Label for Header */
+.stat-val-sub { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); margin-top: 1px; } 
 
 /* TICKET STYLE CARDS */
 .ticket-card {
