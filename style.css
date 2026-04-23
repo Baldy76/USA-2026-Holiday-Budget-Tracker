@@ -13,13 +13,17 @@
     border: 1px solid #f1f5f9;
 }
 
+.dash-card.condensed {
+    padding: 16px 20px;
+}
+
 .dash-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: #94a3b8;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .trip-card {
