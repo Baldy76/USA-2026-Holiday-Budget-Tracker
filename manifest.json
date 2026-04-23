@@ -1,7 +1,7 @@
 {
   "name": "Holiday Budget",
   "short_name": "TripBudget",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#4338ca",
