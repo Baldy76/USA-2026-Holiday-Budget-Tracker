@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.3.0</title>
+    <title>USA Trip Tracker v4.4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#4338ca">
 </head>
@@ -267,13 +268,12 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.3') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.4') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
         let editingFuelLoc = null;
 
-        // Trip Data
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
             { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", cat: "🎢 Fun", usd: 500, spent: 0 },
@@ -296,24 +296,12 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.3')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v4.2')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.4')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.3')) || 
                        defaultData;
-        tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-        // FUEL DATA (Array format for v4.3)
-        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.3')) || [];
-        
-        // Migration from v4.2 object format to v4.3 array format
-        if (fuelEntries.length === 0) {
-            let oldFuel = JSON.parse(localStorage.getItem('holidayFuel_v4.2'));
-            if (oldFuel && !Array.isArray(oldFuel)) {
-                Object.entries(oldFuel).forEach(([loc, amt]) => {
-                    if (amt > 0) fuelEntries.push({ id: Date.now() + Math.random(), loc: loc, date: "Imported", usd: amt });
-                });
-                localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
-            }
-        }
+        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.4')) || 
+                          JSON.parse(localStorage.getItem('holidayFuel_v4.3')) || [];
 
         async function init() {
             applyTheme();
@@ -361,7 +349,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.3', tabName);
+            localStorage.setItem('activeTab_v4.4', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -393,7 +381,6 @@
         function updateHeaderStats(tabName) {
             let plannedUsd = 0, spentUsd = 0, leftUsd = 0;
             
-            // Fuel completely isolated from header stats
             if (tabName === 'Home') {
                 spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
                 plannedUsd = bankrollGbp * exchangeRate;
@@ -419,7 +406,6 @@
         }
 
         function updateDashboard() {
-            // Core Stats (Fuel isolated)
             const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
             const limitUsd = bankrollGbp * exchangeRate;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
@@ -427,12 +413,10 @@
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
-            // Dashboard Fuel Card
             const totalGlobalFuel = fuelEntries.reduce((s, e) => s + e.usd, 0);
             animateValue('fuel-usd', Math.round(totalGlobalFuel));
             document.getElementById('fuel-gbp').innerText = `£${Math.round(totalGlobalFuel / exchangeRate)}`;
 
-            // Spending Insights
             const catColors = { '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
             let catTotals = {};
             tripData.forEach(i => { if(i.spent > 0) catTotals[i.cat] = (catTotals[i.cat] || 0) + i.spent; });
@@ -458,7 +442,6 @@
             document.getElementById('insights-bar').innerHTML = insightsBarHtml;
             document.getElementById('insights-legend').innerHTML = insightsLegendHtml;
 
-            // Regional Health
             const locs = { 'LA': '🌴', 'Utah': '🏔️', 'Vegas': '🎰' };
             const regionalContainer = document.getElementById('regional-stats');
             regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon]) => {
@@ -500,14 +483,20 @@
             }).join('');
         }
 
+        let touchStartX = 0;
+        let touchEndX = 0;
+        function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+        function handleTouchEnd(e, index) {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 60) openEdit(index); 
+        }
+
         function renderGrid(filter) {
             const fuelContainer = document.getElementById('location-fuel-container');
             const grid = document.getElementById('tab-content');
             
-            // Location Specific Fuel Total
             const locFuelTotal = fuelEntries.filter(e => e.loc === filter).reduce((s, e) => s + e.usd, 0);
 
-            // Inject Static Fuel Pill at Top
             fuelContainer.innerHTML = `
                 <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-md flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors mb-6 cursor-pointer active:scale-95" onclick="openFuelEdit('${filter}')">
                     <div class="flex items-center gap-3">
@@ -589,11 +578,10 @@
             }).join('');
         }
 
-        // ADMIN LOGIC
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.3', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.4', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -614,7 +602,7 @@
             }
         }
 
-        // FUEL LOGIC (Tabular)
+        // FUEL LOGIC
         function renderLocalFuelList(loc) {
             const listData = fuelEntries.filter(e => e.loc === loc);
             const total = listData.reduce((s, e) => s + e.usd, 0);
@@ -639,11 +627,8 @@
         function openFuelEdit(loc) {
             editingFuelLoc = loc;
             document.getElementById('local-fuel-modal-title').innerText = `${loc} Fuel Log`;
-            
-            // Pre-fill date with today
             document.getElementById('new-fuel-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('new-fuel-usd').value = '';
-            
             renderLocalFuelList(loc);
             toggleLocalFuelModal(true);
         }
@@ -654,28 +639,19 @@
             
             if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
-            fuelEntries.push({
-                id: Date.now(),
-                loc: editingFuelLoc,
-                date: dateVal,
-                usd: amtVal
-            });
-            
-            localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
+            fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
+            localStorage.setItem('holidayFuel_v4.4', JSON.stringify(fuelEntries));
             
             document.getElementById('new-fuel-usd').value = '';
             renderLocalFuelList(editingFuelLoc);
-            
-            // Background update UI
             renderGrid(editingFuelLoc);
         }
 
         function deleteFuelEntry(id) {
             if(confirm("Remove this fuel entry?")) {
                 fuelEntries = fuelEntries.filter(e => e.id !== id);
-                localStorage.setItem('holidayFuel_v4.3', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayFuel_v4.4', JSON.stringify(fuelEntries));
                 
-                // Re-render wherever we are
                 if(editingFuelLoc) {
                     renderLocalFuelList(editingFuelLoc);
                     renderGrid(editingFuelLoc);
@@ -697,7 +673,6 @@
             }
         }
 
-        // GLOBAL FUEL LOGIC
         function renderGlobalFuelList() {
             const total = fuelEntries.reduce((s, e) => s + e.usd, 0);
             const tbody = document.getElementById('global-fuel-list');
@@ -733,7 +708,6 @@
             }
         }
 
-        // ACTIVITY EDIT LOGIC
         function openEdit(index) {
             editingIndex = index;
             const item = tripData[index];
@@ -754,7 +728,7 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.3', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.4', JSON.stringify(tripData));
 
             if(spent > usd && usd > 0) {
                 const modalCard = document.getElementById('modal-card');
