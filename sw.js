@@ -1,5 +1,5 @@
-const CACHE_NAME = 'budget-v4.3.0';
-const ASSETS = ['index.html', 'style.css', 'manifest.json'];
+const CACHE_NAME = 'budget-v4.4.0';
+const ASSETS = ['index.html', 'style.css', 'manifest.json', 'icon.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
