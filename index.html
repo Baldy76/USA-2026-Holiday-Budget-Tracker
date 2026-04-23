@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v3.2.0</title>
+    <title>USA Trip Tracker v4.0.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -28,17 +29,17 @@
             <div id="header-stats" class="grid grid-cols-3 gap-3">
                 <div class="header-stat-pill">
                     <p class="stat-label">Budget</p>
-                    <p id="stat-goal-usd" class="stat-val anim-val" data-val="0">$0</p>
+                    <p id="stat-goal-usd" class="stat-val anim-val">$0</p>
                     <p id="stat-goal-gbp" class="stat-val-sub">£0</p>
                 </div>
                 <div class="header-stat-pill">
                     <p class="stat-label">Spent</p>
-                    <p id="stat-spent-usd" class="stat-val text-orange-200 anim-val" data-val="0">$0</p>
+                    <p id="stat-spent-usd" class="stat-val text-orange-200 anim-val">$0</p>
                     <p id="stat-spent-gbp" class="stat-val-sub text-orange-200/70">£0</p>
                 </div>
                 <div id="remain-pill" class="header-stat-pill bg-white/30 border-white/50 transition-colors">
                     <p class="stat-label">Balance</p>
-                    <p id="stat-remain-usd" class="stat-val anim-val" data-val="0">$0</p>
+                    <p id="stat-remain-usd" class="stat-val anim-val">$0</p>
                     <p id="stat-remain-gbp" class="stat-val-sub">£0</p>
                 </div>
             </div>
@@ -49,14 +50,35 @@
         
         <div id="dashboard-view" class="space-y-6">
             
-            <div class="surface-card p-6 rounded-[35px] shadow-xl shadow-indigo-100/50 mt-2 border-2 border-surface">
+            <div class="slush-card p-6 rounded-[35px] shadow-xl mt-2 relative overflow-hidden">
+                <div class="absolute -right-4 -top-2 text-7xl opacity-20 transform rotate-12">💎</div>
+                <div class="flex justify-between mb-1 items-start relative z-10">
+                    <span class="text-[10px] font-black text-teal-100 uppercase tracking-widest">💎 The Slush Fund</span>
+                </div>
+                <div class="flex justify-between items-end relative z-10">
+                    <h2 id="slush-usd" class="text-4xl font-black text-white">$0</h2>
+                    <h3 id="slush-gbp" class="text-lg font-bold text-teal-200">£0</h3>
+                </div>
+                <p class="text-[9px] text-teal-50 font-medium mt-2 relative z-10 uppercase tracking-widest opacity-80">Accumulated Savings. Treat Yourself!</p>
+            </div>
+
+            <div class="surface-card p-6 rounded-[35px] shadow-lg shadow-indigo-100/50 border-surface border">
                 <div class="flex justify-between mb-3 items-center">
                     <span class="text-[10px] font-black text-mute uppercase tracking-widest">Overall Budget Burn</span>
                     <span id="burn-percent" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1 rounded-full text-[10px] font-black tracking-tighter">0%</span>
                 </div>
-                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden p-1 shadow-inner">
+                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden p-1 shadow-inner">
                     <div id="burn-progress" class="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-blue-600 to-indigo-600" style="width: 0%"></div>
                 </div>
+            </div>
+
+            <div class="surface-card p-6 rounded-[35px] shadow-lg shadow-indigo-100/50 border border-surface">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-lg">📊</span>
+                    <p class="text-[11px] font-black text-mute uppercase tracking-widest">Spending Insights</p>
+                </div>
+                <div id="insights-bar" class="w-full h-5 rounded-full overflow-hidden flex mb-4 shadow-inner"></div>
+                <div id="insights-legend" class="grid grid-cols-2 gap-2"></div>
             </div>
 
             <div>
@@ -64,7 +86,7 @@
                     <span class="text-lg">🗺️</span>
                     <p class="text-[11px] font-black text-mute uppercase tracking-widest">Regional Health</p>
                 </div>
-                <div id="regional-stats" class="space-y-5"></div>
+                <div id="regional-stats" class="space-y-4"></div>
             </div>
         </div>
 
@@ -111,32 +133,22 @@
 
     <nav class="nav-container">
         <div class="nav-wrapper">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn">
-                <span class="nav-icon">🌴</span><span class="nav-text">LA</span>
-            </button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn">
-                <span class="nav-icon">🏔️</span><span class="nav-text">Utah</span>
-            </button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center">
-                <span>🏠</span>
-            </button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn">
-                <span class="nav-icon">🎰</span><span class="nav-text">Vegas</span>
-            </button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn">
-                <span class="nav-icon">⚙️</span><span class="nav-text">Admin</span>
-            </button>
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn"><span class="nav-icon">🌴</span><span class="nav-text">LA</span></button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn"><span class="nav-icon">🏔️</span><span class="nav-text">Utah</span></button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center"><span>🏠</span></button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn"><span class="nav-icon">🎰</span><span class="nav-text">Vegas</span></button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn"><span class="nav-icon">⚙️</span><span class="nav-text">Admin</span></button>
         </div>
     </nav>
 
     <div id="modal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleModal()"></div>
-        <div class="modal-content-sheet bg-surface w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-200 dark:border-slate-700">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity duration-300" onclick="toggleModal(false)"></div>
+        <div id="modal-card" class="modal-content-sheet bg-surface w-full sm:max-w-md rounded-t-[40px] sm:rounded-[40px] shadow-2xl z-50 overflow-hidden pb-8 sm:pb-0 border-t border-slate-200 dark:border-slate-700">
             <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mt-4 mb-2 sm:hidden"></div>
             <div class="p-8 pt-4">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-black tracking-tight text-primary" id="modal-title">Edit Entry</h3>
-                    <button onclick="toggleModal()" class="bg-surface-alt p-2 rounded-full text-mute hover:text-primary transition-colors">✕</button>
+                    <button onclick="toggleModal(false)" class="bg-surface-alt p-2 rounded-full text-mute hover:text-primary transition-colors">✕</button>
                 </div>
                 <div class="space-y-5">
                     
@@ -174,7 +186,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v3.2') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.0') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
@@ -201,9 +213,10 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v3.2')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v3.1')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.0')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v3.2')) || 
                        defaultData;
+
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
         async function init() {
@@ -234,7 +247,7 @@
             } catch (e) { console.warn("API Offline"); }
         }
 
-        function animateValue(objId, end, duration = 1000) {
+        function animateValue(objId, end, duration = 800) {
             const obj = document.getElementById(objId);
             if(!obj) return;
             let startTimestamp = null;
@@ -252,7 +265,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v3.2', tabName);
+            localStorage.setItem('activeTab_v4.0', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -308,6 +321,7 @@
         }
 
         function updateDashboard() {
+            // Core Stats
             const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
             const limitUsd = bankrollGbp * exchangeRate;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
@@ -315,6 +329,41 @@
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
+            // NEW: The Slush Fund
+            let slushUsd = tripData.reduce((s, i) => {
+                if(i.spent > 0 && i.spent < i.usd) return s + (i.usd - i.spent);
+                return s;
+            }, 0);
+            animateValue('slush-usd', Math.round(slushUsd));
+            document.getElementById('slush-gbp').innerText = `£${Math.round(slushUsd / exchangeRate)}`;
+
+            // NEW: Spending Insights
+            const catColors = { '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
+            let catTotals = {};
+            tripData.forEach(i => { if(i.spent > 0) catTotals[i.cat] = (catTotals[i.cat] || 0) + i.spent; });
+            
+            let insightsBarHtml = '';
+            let insightsLegendHtml = '';
+            
+            if(totalActualUsd > 0) {
+                Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).forEach(([cat, amount]) => {
+                    const pct = (amount / totalActualUsd) * 100;
+                    const color = catColors[cat] || 'bg-slate-500';
+                    insightsBarHtml += `<div class="${color} h-full transition-all duration-1000" style="width: ${pct}%"></div>`;
+                    insightsLegendHtml += `
+                    <div class="flex items-center justify-between bg-surface-alt p-3 rounded-xl border border-surface">
+                        <span class="text-[10px] font-bold text-primary truncate">${cat}</span>
+                        <span class="text-[11px] font-black text-mute">${Math.round(pct)}%</span>
+                    </div>`;
+                });
+            } else {
+                insightsBarHtml = `<div class="bg-slate-200 dark:bg-slate-700 h-full w-full"></div>`;
+                insightsLegendHtml = `<p class="text-xs text-mute text-center w-full col-span-2 py-2">Start spending to see insights!</p>`;
+            }
+            document.getElementById('insights-bar').innerHTML = insightsBarHtml;
+            document.getElementById('insights-legend').innerHTML = insightsLegendHtml;
+
+            // Regional Health
             const locs = { 'LA': '🌴', 'Utah': '🏔️', 'Vegas': '🎰' };
             const regionalContainer = document.getElementById('regional-stats');
             regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon]) => {
@@ -323,6 +372,7 @@
                 const actualUsd = data.reduce((s, i) => s + i.spent, 0);
                 const diffUsd = plannedUsd - actualUsd;
                 const statusBorder = actualUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
+                const diffEmoji = actualUsd > 0 ? (diffUsd >= 0 ? '🥳' : '😬') : '';
 
                 return `
                 <div class="surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-lg shadow-slate-200/40 dark:shadow-none transition-colors border border-surface">
@@ -332,7 +382,7 @@
                             <p class="text-[11px] font-black uppercase tracking-widest text-mute">${loc}</p>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] font-black text-mute uppercase mb-0.5">Balance</p>
+                             <p class="text-[8px] font-black text-mute uppercase mb-0.5">Balance ${diffEmoji}</p>
                              <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${(diffUsd/exchangeRate).toFixed(0)}</span></p>
                         </div>
                     </div>
@@ -350,6 +400,7 @@
             }).join('');
         }
 
+        // SWIPE LOGIC
         let touchStartX = 0;
         let touchEndX = 0;
         function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
@@ -385,7 +436,6 @@
                     </div>
                     
                     <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col shadow-lg border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
-                        
                         <div class="p-5 flex gap-4 items-center relative bg-white dark:bg-slate-800">
                             <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-md shadow-indigo-500/20 text-white border border-indigo-400/30">
                                 <p class="text-[8px] font-black uppercase opacity-90">${month}</p>
@@ -420,7 +470,6 @@
                                 <p class="text-xl font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
                             </div>
                         </div>
-
                     </div>
                 </div>`;
             }).join('');
@@ -429,9 +478,8 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v3.2', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.0', JSON.stringify(tripData));
             switchTab('Home');
-            alert("✅ Budget Plan Updated!");
         }
 
         async function systemSync() {
@@ -459,22 +507,45 @@
             document.getElementById('edit-usd').value = item.usd;
             document.getElementById('edit-spent').value = item.spent;
             document.getElementById('edit-activity').value = item.activity;
-            toggleModal();
+            toggleModal(true);
         }
 
         function saveChanges() {
+            const usd = parseFloat(document.getElementById('edit-usd').value) || 0;
+            const spent = parseFloat(document.getElementById('edit-spent').value) || 0;
+            
             tripData[editingIndex].cat = document.getElementById('edit-cat').value;
-            tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
-            tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
+            tripData[editingIndex].usd = usd;
+            tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v3.2', JSON.stringify(tripData));
-            toggleModal();
-            switchTab(currentTab);
+            
+            localStorage.setItem('holidayBudget_v4.0', JSON.stringify(tripData));
+
+            // MICRO-INTERACTIONS LOGIC
+            if(spent > usd && usd > 0) {
+                // OVER BUDGET -> Shake Modal
+                const modalCard = document.getElementById('modal-card');
+                modalCard.classList.add('shake-anim');
+                setTimeout(() => {
+                    modalCard.classList.remove('shake-anim');
+                    toggleModal(false);
+                    switchTab(currentTab);
+                }, 400);
+            } else if (spent > 0 && spent < usd) {
+                // UNDER BUDGET -> Confetti!
+                confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, zIndex: 100 });
+                toggleModal(false);
+                switchTab(currentTab);
+            } else {
+                // NEUTRAL
+                toggleModal(false);
+                switchTab(currentTab);
+            }
         }
 
-        function toggleModal() {
+        function toggleModal(show) {
             const m = document.getElementById('modal');
-            if (m.classList.contains('opacity-0')) {
+            if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
                 document.body.classList.add('modal-active');
             } else {
