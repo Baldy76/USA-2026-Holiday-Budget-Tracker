@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v2.4.0</title>
+    <title>USA Trip Tracker v2.5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -17,7 +17,7 @@
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
-                    <p id="view-title" class="text-white/80 text-[10px] uppercase font-black tracking-[0.2em]">Dashboard</p>
+                    <p id="view-title" class="text-white/80 text-[10px] uppercase font-black tracking-[0.2em]">Master Budget</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 text-white shadow-sm">
                     <p class="text-[8px] font-black uppercase opacity-70 leading-none mb-1">Live Rate</p>
@@ -32,9 +32,9 @@
                 </div>
                 <div class="header-stat-pill">
                     <p class="stat-label">Spent</p>
-                    <p id="stat-spent-usd" class="stat-val">$0</p>
+                    <p id="stat-spent-usd" class="stat-val text-orange-200">$0</p>
                 </div>
-                <div id="remain-pill" class="header-stat-pill bg-white/30 border-white/50">
+                <div id="remain-pill" class="header-stat-pill bg-white/30 border-white/50 transition-colors">
                     <p class="stat-label">Left</p>
                     <p id="stat-remain-usd" class="stat-val">$0</p>
                 </div>
@@ -144,7 +144,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v2.4') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v2.5') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let editingIndex = null;
 
@@ -170,8 +170,9 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", usd: 0, spent: 0 }
         ];
 
-        // Developer Magic: Pull data from the previous version so you don't lose your work!
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.4')) || 
+        // Ensure data isn't lost during updates
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v2.5')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v2.4')) || 
                        JSON.parse(localStorage.getItem('holidayBudget_v2.3')) || 
                        defaultData;
 
@@ -192,14 +193,15 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v2.4', tabName);
+            localStorage.setItem('activeTab_v2.5', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
             
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
-            document.getElementById('view-title').innerText = (tabName === 'Home' ? 'Dashboard' : tabName);
+            
+            document.getElementById('view-title').innerText = (tabName === 'Home' ? 'Master Budget' : tabName + ' Budget');
             
             const dash = document.getElementById('dashboard-view');
             const grid = document.getElementById('tab-content');
@@ -209,29 +211,56 @@
             dash.classList.add('hidden');
             grid.classList.add('hidden');
             admin.classList.add('hidden');
-            headStats.classList.add('hidden');
 
-            if(tabName === 'Home') {
-                dash.classList.remove('hidden');
-                headStats.classList.remove('hidden');
-                updateDashboard();
-            } else if(tabName === 'Admin') {
+            if(tabName === 'Admin') {
+                headStats.classList.add('hidden');
                 admin.classList.remove('hidden');
             } else {
-                grid.classList.remove('hidden');
-                renderGrid(tabName);
+                headStats.classList.remove('hidden');
+                
+                if(tabName === 'Home') {
+                    dash.classList.remove('hidden');
+                    updateDashboard();
+                } else {
+                    grid.classList.remove('hidden');
+                    renderGrid(tabName);
+                }
+                updateHeaderStats(tabName); // Updates sticky header dynamically
+            }
+        }
+
+        // NEW: Context-Aware Header Stats
+        function updateHeaderStats(tabName) {
+            let planned = 0, spent = 0, left = 0;
+            
+            if (tabName === 'Home') {
+                spent = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
+                planned = bankrollGbp * exchangeRate;
+                left = planned - spent;
+            } else {
+                const locData = tripData.filter(d => d.loc === tabName);
+                planned = locData.reduce((s, i) => s + (parseFloat(i.usd) || 0), 0);
+                spent = locData.reduce((s, i) => s + (parseFloat(i.spent) || 0), 0);
+                left = planned - spent;
+            }
+
+            document.getElementById('stat-goal-usd').innerText = `$${Math.round(planned)}`;
+            document.getElementById('stat-spent-usd').innerText = `$${Math.round(spent)}`;
+            document.getElementById('stat-remain-usd').innerText = `$${Math.round(left)}`;
+            
+            const pill = document.getElementById('remain-pill');
+            if (left < 0) {
+                pill.className = "header-stat-pill bg-rose-500/90 border-rose-400 transition-colors";
+            } else {
+                pill.className = "header-stat-pill bg-white/30 border-white/50 transition-colors";
             }
         }
 
         function updateDashboard() {
             const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
             const limitUsd = bankrollGbp * exchangeRate;
-            const remainingUsd = limitUsd - totalActualUsd;
             const burnPercent = (totalActualUsd / limitUsd) * 100;
 
-            document.getElementById('stat-goal-usd').innerText = `$${Math.round(limitUsd)}`;
-            document.getElementById('stat-spent-usd').innerText = `$${Math.round(totalActualUsd)}`;
-            document.getElementById('stat-remain-usd').innerText = `$${Math.round(remainingUsd)}`;
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
 
@@ -313,7 +342,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v2.4', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.5', JSON.stringify(tripData));
             switchTab('Home');
             alert("✅ Budget Plan Updated!");
         }
@@ -324,6 +353,7 @@
             await fetchRates();
             btn.innerText = "🔄 Fetch Live Currency";
             updateDashboard();
+            updateHeaderStats(currentTab);
             alert("🚀 Live Rates Synced.");
         }
 
@@ -361,7 +391,7 @@
             tripData[editingIndex].usd = parseFloat(document.getElementById('edit-usd').value) || 0;
             tripData[editingIndex].spent = parseFloat(document.getElementById('edit-spent').value) || 0;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
-            localStorage.setItem('holidayBudget_v2.4', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v2.5', JSON.stringify(tripData));
             toggleModal();
             switchTab(currentTab);
         }
