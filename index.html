@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.5.0</title>
+    <title>USA Trip Tracker v4.6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -273,13 +273,30 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.5') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.6') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
         let editingFuelLoc = null;
 
-        // Pristine Default Data for Factory Reset
+        // --- NEW: SCROLL LOCK LOGIC ---
+        let scrollPosition = 0;
+
+        function lockScroll() {
+            scrollPosition = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollPosition}px`;
+            document.body.style.width = '100%';
+        }
+
+        function unlockScroll() {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            window.scrollTo(0, scrollPosition);
+        }
+        // ------------------------------
+
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
             { day: "Tue 21-Jul", loc: "LA", activity: "Disneyland", cat: "🎢 Fun", usd: 500, spent: 0 },
@@ -302,13 +319,13 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.5')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v4.4')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.6')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.5')) || 
                        JSON.parse(JSON.stringify(defaultData));
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.5')) || 
-                          JSON.parse(localStorage.getItem('holidayFuel_v4.4')) || [];
+        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.6')) || 
+                          JSON.parse(localStorage.getItem('holidayFuel_v4.5')) || [];
 
         async function init() {
             applyTheme();
@@ -356,7 +373,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.5', tabName);
+            localStorage.setItem('activeTab_v4.6', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -585,11 +602,10 @@
             }).join('');
         }
 
-        // SYSTEM ADMIN
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -610,21 +626,16 @@
             }
         }
 
-        // NEW: FACTORY RESET
         function factoryReset() {
             if(confirm("⚠️ WARNING: This will wipe ALL your entered spent amounts, fuel logs, and custom notes. The itinerary will be reset to the original template. Are you absolutely sure?")) {
+                localStorage.removeItem('holidayBudget_v4.6');
+                localStorage.removeItem('holidayFuel_v4.6');
                 
-                // Discard old versions
-                localStorage.removeItem('holidayBudget_v4.5');
-                localStorage.removeItem('holidayFuel_v4.5');
-                
-                // Deep clone the pristine default array so we don't mutate references
                 tripData = JSON.parse(JSON.stringify(defaultData));
                 fuelEntries = [];
                 
-                // Save the clean slate
-                localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
-                localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
+                localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
                 
                 alert("✅ Data has been reset to factory defaults.");
                 window.location.reload(true);
@@ -669,7 +680,7 @@
             if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
             fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-            localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
+            localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
             
             document.getElementById('new-fuel-usd').value = '';
             renderLocalFuelList(editingFuelLoc);
@@ -679,7 +690,7 @@
         function deleteFuelEntry(id) {
             if(confirm("Remove this fuel entry?")) {
                 fuelEntries = fuelEntries.filter(e => e.id !== id);
-                localStorage.setItem('holidayFuel_v4.5', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
                 
                 if(editingFuelLoc) {
                     renderLocalFuelList(editingFuelLoc);
@@ -695,10 +706,10 @@
             const m = document.getElementById('local-fuel-modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
-                document.body.classList.add('modal-active');
+                lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
-                document.body.classList.remove('modal-active');
+                unlockScroll();
             }
         }
 
@@ -722,7 +733,7 @@
         }
 
         function openGlobalFuelModal() {
-            editingFuelLoc = null; // We are in global mode
+            editingFuelLoc = null; 
             renderGlobalFuelList();
             toggleGlobalFuelModal(true);
         }
@@ -731,10 +742,10 @@
             const m = document.getElementById('global-fuel-modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
-                document.body.classList.add('modal-active');
+                lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
-                document.body.classList.remove('modal-active');
+                unlockScroll();
             }
         }
 
@@ -759,7 +770,7 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.5', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
 
             if(spent > usd && usd > 0) {
                 const modalCard = document.getElementById('modal-card');
@@ -783,10 +794,10 @@
             const m = document.getElementById('modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
-                document.body.classList.add('modal-active');
+                lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
-                document.body.classList.remove('modal-active');
+                unlockScroll();
             }
         }
 
