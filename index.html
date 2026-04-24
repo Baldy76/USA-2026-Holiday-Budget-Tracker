@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v5.0.0</title>
+    <title>USA Trip Tracker v5.1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -124,12 +124,22 @@
                         <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Save Budget</button>
                     </div>
 
+                    <div class="p-6 bg-surface-alt rounded-3xl border border-surface grid gap-3">
+                        <p class="text-[10px] font-black text-mute uppercase mb-1 tracking-widest">System Maintenance</p>
+                        <button onclick="systemSync()" class="btn-action bg-slate-800 dark:bg-slate-200 dark:text-slate-900 text-[10px] flex justify-center items-center gap-2">
+                            <span>🔄</span> Sync App (Live Rates)
+                        </button>
+                        <button onclick="forceAppUpdate()" class="btn-action bg-blue-500 text-[10px] flex justify-center items-center gap-2">
+                            <span>⚡</span> Force App Version Update
+                        </button>
+                    </div>
+
                     <div class="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-900/30 mt-6">
                         <p class="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest text-center">Share Template</p>
                         <button onclick="wipeForSharing()" class="btn-action bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30">
                             📤 Wipe Budgets & Notes
                         </button>
-                        <p class="text-center text-[9px] text-blue-400 font-bold uppercase tracking-widest mt-3">Keeps dates/locations. Wipes all money & text.</p>
+                        <p class="text-center text-[9px] text-blue-400 font-bold uppercase tracking-widest mt-3">Keeps dates/locations. Wipes all money.</p>
                     </div>
 
                     <div class="p-6 bg-red-50 dark:bg-red-900/20 rounded-3xl border border-red-100 dark:border-red-900/30 mt-6">
@@ -140,17 +150,35 @@
                         <p class="text-center text-[9px] text-red-400 font-bold uppercase tracking-widest mt-3">Wipes inputs. Restores default itinerary.</p>
                     </div>
                 </div>
+                
+                <div class="mt-8 text-center opacity-60">
+                    <p class="text-[10px] font-black font-mono text-mute tracking-widest uppercase">Version 5.1.0</p>
+                </div>
             </section>
         </div>
     </main>
 
     <nav class="nav-container">
         <div class="nav-wrapper">
-            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn group"><span class="nav-icon group-active:scale-125 group-active:-translate-y-2">🌴</span><span class="nav-text">LA</span></button>
-            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn group"><span class="nav-icon group-active:scale-125 group-active:-translate-y-2">🏔️</span><span class="nav-text">Utah</span></button>
-            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center active:scale-90 transition-transform"><span>🏠</span></button>
-            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn group"><span class="nav-icon group-active:scale-125 group-active:-translate-y-2">🎰</span><span class="nav-text">Vegas</span></button>
-            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn group"><span class="nav-icon group-active:scale-125 group-active:-translate-y-2 rotate-icon">⚙️</span><span class="nav-text">Admin</span></button>
+            <button onclick="switchTab('LA')" id="nav-LA" class="nav-btn group">
+                <span class="nav-icon-bg"><span class="nav-icon group-active:scale-125">🌴</span></span>
+                <span class="nav-text">LA</span>
+            </button>
+            <button onclick="switchTab('Utah')" id="nav-Utah" class="nav-btn group">
+                <span class="nav-icon-bg"><span class="nav-icon group-active:scale-125">🏔️</span></span>
+                <span class="nav-text">Utah</span>
+            </button>
+            <button onclick="switchTab('Home')" id="nav-Home" class="nav-btn-center active:scale-90 transition-transform">
+                <span>🏠</span>
+            </button>
+            <button onclick="switchTab('Vegas')" id="nav-Vegas" class="nav-btn group">
+                <span class="nav-icon-bg"><span class="nav-icon group-active:scale-125">🎰</span></span>
+                <span class="nav-text">Vegas</span>
+            </button>
+            <button onclick="switchTab('Admin')" id="nav-Admin" class="nav-btn group">
+                <span class="nav-icon-bg"><span class="nav-icon group-active:scale-125">⚙️</span></span>
+                <span class="nav-text">Admin</span>
+            </button>
         </div>
     </nav>
 
