@@ -1,11 +1,11 @@
 /**
  * USA 2026 Holiday Budget Tracker 
- * Version 5.0.0 "The Vibe Update" Engine
+ * Version 5.1.0 Engine
  */
 
 const API_URL = "https://open.er-api.com/v6/latest/GBP";
 let exchangeRate = 1.35; 
-let currentTab = localStorage.getItem('activeTab_v5.0') || 'Home';
+let currentTab = localStorage.getItem('activeTab_v5.1') || 'Home';
 let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
 let isDarkMode = localStorage.getItem('vegasMode') === 'true';
 let editingIndex = null;
@@ -57,20 +57,20 @@ const defaultData = [
     { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
 ];
 
-let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.0')) || 
-               JSON.parse(localStorage.getItem('holidayBudget_v4.8')) || 
+let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.1')) || 
+               JSON.parse(localStorage.getItem('holidayBudget_v5.0')) || 
                JSON.parse(JSON.stringify(defaultData));
 tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.0')) || 
-                  JSON.parse(localStorage.getItem('holidayFuel_v4.8')) || [];
+let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.1')) || 
+                  JSON.parse(localStorage.getItem('holidayFuel_v5.0')) || [];
 
 async function init() {
     applyTheme();
     await fetchRates();
     document.getElementById('input-gbp-limit').value = bankrollGbp;
     document.getElementById('dark-mode-toggle').checked = isDarkMode;
-    switchTab(currentTab, false); // false prevents haptic on initial load
+    switchTab(currentTab, false);
 }
 
 function applyTheme() {
@@ -113,14 +113,14 @@ function animateValue(objId, end, duration = 800) {
 function switchTab(tabName, withHaptic = true) {
     if(withHaptic) triggerHaptic('light');
     currentTab = tabName;
-    localStorage.setItem('activeTab_v5.0', tabName);
+    localStorage.setItem('activeTab_v5.1', tabName);
     
     const header = document.getElementById('main-header');
     header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()} shadow-md`;
     
     // AMBIENT BACKGROUND LOGIC
     document.body.className = `bg-slate-100 text-slate-900 no-scrollbar transition-all duration-700 ease-in-out ambient-${tabName.toLowerCase()}`;
-    applyTheme(); // Re-apply dark mode to the new base string
+    applyTheme(); 
     
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
@@ -182,7 +182,6 @@ function updateDashboard() {
     document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
     document.getElementById('burn-progress').style.width = `${cappedPercent}%`;
     
-    // CAR ANIMATION
     setTimeout(() => {
         document.getElementById('burn-car').style.left = `${cappedPercent}%`;
     }, 100);
@@ -231,7 +230,6 @@ function updateDashboard() {
         const statusBorder = actualUsd === 0 && plannedUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-rose-500 dark:border-rose-600');
         const diffEmoji = actualUsd > 0 ? (diffUsd >= 0 ? '🥳' : '😬') : '';
 
-        // Added stagger animation to regional cards
         return `
         <div class="animate-ticket surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-lg shadow-slate-200/40 dark:shadow-none transition-colors border border-surface glass-panel" style="animation-delay: ${index * 0.15}s;">
             <div class="flex justify-between items-center mb-3">
@@ -310,7 +308,6 @@ function renderGrid(filter) {
             } else { dayNum = parts[1]; }
         }
 
-        // Staggered Animation
         return `
         <div class="ticket-card surface-card animate-ticket" style="animation-delay: ${(loopIndex * 0.1) + 0.1}s;" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
             <div class="absolute inset-y-0 right-0 bg-indigo-500 w-16 rounded-r-[32px] flex items-center justify-center -z-10 opacity-0 transition-opacity">
@@ -361,7 +358,7 @@ function saveAdminSettings() {
     triggerHaptic('heavy');
     bankrollGbp = document.getElementById('input-gbp-limit').value;
     localStorage.setItem('bankrollGbp', bankrollGbp);
-    localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
     switchTab('Home');
 }
 
@@ -373,8 +370,8 @@ function wipeForSharing() {
         }));
         fuelEntries = []; bankrollGbp = 0;
         document.getElementById('input-gbp-limit').value = 0;
-        localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
         localStorage.setItem('bankrollGbp', bankrollGbp);
         window.location.reload(true);
     }
@@ -383,12 +380,12 @@ function wipeForSharing() {
 function factoryReset() {
     triggerHaptic('error');
     if(confirm("⚠️ WARNING: This will restore the default original itinerary (with pre-filled notes). Are you sure?")) {
-        localStorage.removeItem('holidayBudget_v5.0');
-        localStorage.removeItem('holidayFuel_v5.0');
+        localStorage.removeItem('holidayBudget_v5.1');
+        localStorage.removeItem('holidayFuel_v5.1');
         tripData = JSON.parse(JSON.stringify(defaultData));
         fuelEntries = [];
-        localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
         window.location.reload(true);
     }
 }
@@ -430,7 +427,7 @@ function addLocalFuel() {
     if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
     fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-    localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
+    localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
     
     document.getElementById('new-fuel-usd').value = '';
     renderLocalFuelList(editingFuelLoc);
@@ -441,7 +438,7 @@ function deleteFuelEntry(id) {
     if(confirm("Remove this fuel entry?")) {
         triggerHaptic('heavy');
         fuelEntries = fuelEntries.filter(e => e.id !== id);
-        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
         
         if(editingFuelLoc) {
             renderLocalFuelList(editingFuelLoc);
@@ -525,9 +522,8 @@ function saveChanges() {
     tripData[editingIndex].spent = spent;
     tripData[editingIndex].activity = document.getElementById('edit-activity').value;
     
-    localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
 
-    // VIBE CHECK: Animations and Haptics
     if(spent > usd && usd > 0) {
         triggerHaptic('error');
         const modalCard = document.getElementById('modal-card');
@@ -560,6 +556,25 @@ function toggleModal(show) {
         m.classList.add('opacity-0', 'pointer-events-none');
         document.body.classList.remove('modal-active');
         unlockScroll();
+    }
+}
+
+async function systemSync() {
+    triggerHaptic('light');
+    await fetchRates();
+    updateDashboard();
+    updateHeaderStats(currentTab);
+    alert("🚀 Live Rates Synced.");
+}
+
+function forceAppUpdate() {
+    triggerHaptic('light');
+    if(confirm("Force App Update? This clears the cache to pull new code.")) {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+        }
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+              .then(() => window.location.reload(true));
     }
 }
 
