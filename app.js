@@ -1,23 +1,32 @@
 /**
  * USA 2026 Holiday Budget Tracker 
- * Version 5.3.0 Engine (OS Theme Integration)
+ * Version 5.4.0 Engine (Shadow Reserve)
  */
 
 const API_URL = "https://open.er-api.com/v6/latest/GBP";
 let exchangeRate = 1.35; 
-let currentTab = localStorage.getItem('activeTab_v5.3') || localStorage.getItem('activeTab_v5.2') || 'Home';
+let currentTab = localStorage.getItem('activeTab_v5.4') || localStorage.getItem('activeTab_v5.3') || 'Home';
 let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
-let isDarkMode = false; // Overwritten by OS/storage logic below
+let isDarkMode = false; 
 let editingIndex = null;
 let editingFuelLoc = null;
 
-// --- 1. NEW THEME ENGINE ---
+// --- NEW: SHADOW RESERVE VARIABLES ---
+let backupGbp = localStorage.getItem('backupGbp') || 0;
+let backupActive = localStorage.getItem('backupActive') === 'true';
+
+function getEffectiveBudgetGbp() {
+    return parseFloat(bankrollGbp) + (backupActive ? parseFloat(backupGbp) : 0);
+}
+function getEffectiveBudgetUsd() {
+    return getEffectiveBudgetGbp() * exchangeRate;
+}
+
+// --- THEME ENGINE ---
 function applyThemeMode(isDark) {
-    // Toggle the 'dark' class for Tailwind styling
     document.body.classList.toggle('dark', isDark);
     isDarkMode = isDark;
     
-    // Update the UI Segmented Buttons
     const btnLight = document.getElementById('btnLight');
     const btnDark = document.getElementById('btnDark');
     if (btnLight && btnDark) {
@@ -30,10 +39,8 @@ function applyThemeMode(isDark) {
         }
     }
 
-    // Update the Mobile OS Status Bar Color
     const meta = document.getElementById('theme-meta');
     if (meta) {
-        // Match our slate-100 (light) and slate-950 (dark) base backgrounds
         meta.content = isDark ? '#020617' : '#f1f5f9';
     }
 }
@@ -44,7 +51,7 @@ function setThemeMode(isDark) {
     localStorage.setItem('USA26_Theme', isDark); 
 }
 
-// --- HAPTIC FEEDBACK ENGINE ---
+// --- HAPTIC ENGINE ---
 function triggerHaptic(type = 'light') {
     if (!navigator.vibrate) return;
     if (type === 'light') navigator.vibrate(30);
@@ -90,32 +97,31 @@ const defaultData = [
     { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
 ];
 
-let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.3')) || 
-               JSON.parse(localStorage.getItem('holidayBudget_v5.2')) || 
+let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.4')) || 
+               JSON.parse(localStorage.getItem('holidayBudget_v5.3')) || 
                JSON.parse(JSON.stringify(defaultData));
 tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.3')) || 
-                  JSON.parse(localStorage.getItem('holidayFuel_v5.2')) || [];
+let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.4')) || 
+                  JSON.parse(localStorage.getItem('holidayFuel_v5.3')) || [];
 
 async function init() {
-    // OS Theme Fallback Boot Sequence
     const savedTheme = localStorage.getItem('USA26_Theme');
-    const oldVegas = localStorage.getItem('vegasMode'); // check old toggle status
     const prefersDarkOS = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    let initialDark = prefersDarkOS;
-    if (savedTheme !== null) initialDark = savedTheme === 'true';
-    else if (oldVegas !== null) initialDark = oldVegas === 'true';
+    let initialDark = savedTheme !== null ? savedTheme === 'true' : prefersDarkOS;
 
     applyThemeMode(initialDark);
     
-    // Bind the new UI buttons
     document.getElementById('btnLight')?.addEventListener('click', () => setThemeMode(false));
     document.getElementById('btnDark')?.addEventListener('click', () => setThemeMode(true));
 
     await fetchRates();
+    
+    // Setup Admin Inputs
     document.getElementById('input-gbp-limit').value = bankrollGbp;
+    document.getElementById('input-backup-gbp').value = backupGbp;
+    document.getElementById('backup-toggle').checked = backupActive;
+    
     switchTab(currentTab, false);
 }
 
@@ -147,14 +153,13 @@ function animateValue(objId, end, duration = 800) {
 function switchTab(tabName, withHaptic = true) {
     if(withHaptic) triggerHaptic('light');
     currentTab = tabName;
-    localStorage.setItem('activeTab_v5.3', tabName);
+    localStorage.setItem('activeTab_v5.4', tabName);
     
     const header = document.getElementById('main-header');
     header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()} shadow-md`;
     
-    // Ambient Background Base Update
     document.body.className = `text-slate-900 no-scrollbar transition-all duration-700 ease-in-out ambient-${tabName.toLowerCase()}`;
-    applyThemeMode(isDarkMode); // reapply the dark mode class explicitly over the base string
+    applyThemeMode(isDarkMode); 
     
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
@@ -183,9 +188,15 @@ function switchTab(tabName, withHaptic = true) {
 function updateHeaderStats(tabName) {
     let plannedUsd = 0, spentUsd = 0, leftUsd = 0;
     
+    // Check Reserve Badge
+    const badge = document.getElementById('backup-badge');
+    if (backupActive) badge.classList.remove('hidden');
+    else badge.classList.add('hidden');
+
     if (tabName === 'Home') {
         spentUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
-        plannedUsd = bankrollGbp * exchangeRate;
+        // USE EFFECTIVE BUDGET
+        plannedUsd = getEffectiveBudgetUsd();
         leftUsd = plannedUsd - spentUsd;
     } else {
         const locData = tripData.filter(d => d.loc === tabName);
@@ -209,7 +220,8 @@ function updateHeaderStats(tabName) {
 
 function updateDashboard() {
     const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
-    const limitUsd = bankrollGbp * exchangeRate;
+    // USE EFFECTIVE BUDGET
+    const limitUsd = getEffectiveBudgetUsd();
     const burnPercent = limitUsd > 0 ? (totalActualUsd / limitUsd) * 100 : 0;
     const cappedPercent = Math.min(burnPercent, 100);
 
@@ -365,9 +377,15 @@ function renderGrid(filter) {
 
 function saveAdminSettings() {
     triggerHaptic('heavy');
-    bankrollGbp = document.getElementById('input-gbp-limit').value;
+    bankrollGbp = document.getElementById('input-gbp-limit').value || 0;
+    backupGbp = document.getElementById('input-backup-gbp').value || 0;
+    backupActive = document.getElementById('backup-toggle').checked;
+    
     localStorage.setItem('bankrollGbp', bankrollGbp);
-    localStorage.setItem('holidayBudget_v5.3', JSON.stringify(tripData));
+    localStorage.setItem('backupGbp', backupGbp);
+    localStorage.setItem('backupActive', backupActive);
+    localStorage.setItem('holidayBudget_v5.4', JSON.stringify(tripData));
+    
     switchTab('Home');
 }
 
@@ -377,11 +395,21 @@ function wipeForSharing() {
         tripData = tripData.map(item => ({
             day: item.day, loc: item.loc, activity: "", cat: "🛍️ Mixed", usd: 0, spent: 0
         }));
-        fuelEntries = []; bankrollGbp = 0;
+        fuelEntries = []; 
+        bankrollGbp = 0;
+        backupGbp = 0;
+        backupActive = false;
+
         document.getElementById('input-gbp-limit').value = 0;
-        localStorage.setItem('holidayBudget_v5.3', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.3', JSON.stringify(fuelEntries));
+        document.getElementById('input-backup-gbp').value = 0;
+        document.getElementById('backup-toggle').checked = false;
+
+        localStorage.setItem('holidayBudget_v5.4', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.4', JSON.stringify(fuelEntries));
         localStorage.setItem('bankrollGbp', bankrollGbp);
+        localStorage.setItem('backupGbp', backupGbp);
+        localStorage.setItem('backupActive', backupActive);
+        
         window.location.reload(true);
     }
 }
@@ -389,12 +417,17 @@ function wipeForSharing() {
 function factoryReset() {
     triggerHaptic('error');
     if(confirm("⚠️ WARNING: This will restore the default original itinerary (with pre-filled notes). Are you sure?")) {
-        localStorage.removeItem('holidayBudget_v5.3');
-        localStorage.removeItem('holidayFuel_v5.3');
+        localStorage.removeItem('holidayBudget_v5.4');
+        localStorage.removeItem('holidayFuel_v5.4');
+        
         tripData = JSON.parse(JSON.stringify(defaultData));
         fuelEntries = [];
-        localStorage.setItem('holidayBudget_v5.3', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.3', JSON.stringify(fuelEntries));
+        
+        localStorage.setItem('holidayBudget_v5.4', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.4', JSON.stringify(fuelEntries));
+        localStorage.removeItem('backupGbp');
+        localStorage.removeItem('backupActive');
+        
         window.location.reload(true);
     }
 }
@@ -436,7 +469,7 @@ function addLocalFuel() {
     if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
     fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-    localStorage.setItem('holidayFuel_v5.3', JSON.stringify(fuelEntries));
+    localStorage.setItem('holidayFuel_v5.4', JSON.stringify(fuelEntries));
     
     document.getElementById('new-fuel-usd').value = '';
     renderLocalFuelList(editingFuelLoc);
@@ -447,7 +480,7 @@ function deleteFuelEntry(id) {
     if(confirm("Remove this fuel entry?")) {
         triggerHaptic('heavy');
         fuelEntries = fuelEntries.filter(e => e.id !== id);
-        localStorage.setItem('holidayFuel_v5.3', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayFuel_v5.4', JSON.stringify(fuelEntries));
         
         if(editingFuelLoc) {
             renderLocalFuelList(editingFuelLoc);
@@ -531,7 +564,7 @@ function saveChanges() {
     tripData[editingIndex].spent = spent;
     tripData[editingIndex].activity = document.getElementById('edit-activity').value;
     
-    localStorage.setItem('holidayBudget_v5.3', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.4', JSON.stringify(tripData));
 
     if(spent > usd && usd > 0) {
         triggerHaptic('error');
@@ -590,7 +623,7 @@ function forceAppUpdate() {
 // Map variables to window for inline HTML onclick calls
 window.switchTab = switchTab;
 window.openGlobalFuelModal = openGlobalFuelModal;
-window.setThemeMode = setThemeMode; // NEW
+window.setThemeMode = setThemeMode; 
 window.saveAdminSettings = saveAdminSettings;
 window.systemSync = systemSync;
 window.forceAppUpdate = forceAppUpdate;
