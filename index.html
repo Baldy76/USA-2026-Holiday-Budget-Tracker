@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.6.1</title>
+    <title>USA Trip Tracker v4.7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -133,12 +133,20 @@
                         </button>
                     </div>
 
+                    <div class="p-6 bg-blue-50 dark:bg-blue-900/10 rounded-3xl border border-blue-100 dark:border-blue-900/30 mt-6">
+                        <p class="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest text-center">Share Template</p>
+                        <button onclick="wipeForSharing()" class="btn-action bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+                            📤 Wipe Budgets & Notes
+                        </button>
+                        <p class="text-center text-[9px] text-blue-400 font-bold uppercase tracking-widest mt-3">Keeps dates/locations. Wipes all money & text.</p>
+                    </div>
+
                     <div class="p-6 bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/30 mt-6">
                         <p class="text-[10px] font-black text-red-500 uppercase mb-4 tracking-widest text-center">Danger Zone</p>
                         <button onclick="factoryReset()" class="btn-action bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20">
-                            ⚠️ Factory Reset Data
+                            ⚠️ Factory Reset to Default
                         </button>
-                        <p class="text-center text-[9px] text-red-400 font-bold uppercase tracking-widest mt-3">Wipes inputs. Restores default itinerary.</p>
+                        <p class="text-center text-[9px] text-red-400 font-bold uppercase tracking-widest mt-3">Fully restores the original app template.</p>
                     </div>
                 </div>
             </section>
@@ -271,7 +279,7 @@
     <script>
         const API_URL = "https://open.er-api.com/v6/latest/GBP";
         let exchangeRate = 1.35; 
-        let currentTab = localStorage.getItem('activeTab_v4.6') || 'Home';
+        let currentTab = localStorage.getItem('activeTab_v4.7') || 'Home';
         let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
         let isDarkMode = localStorage.getItem('vegasMode') === 'true';
         let editingIndex = null;
@@ -316,13 +324,13 @@
             { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
         ];
 
-        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.6')) || 
-                       JSON.parse(localStorage.getItem('holidayBudget_v4.5')) || 
+        let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.7')) || 
+                       JSON.parse(localStorage.getItem('holidayBudget_v4.6')) || 
                        JSON.parse(JSON.stringify(defaultData));
         tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.6')) || 
-                          JSON.parse(localStorage.getItem('holidayFuel_v4.5')) || [];
+        let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.7')) || 
+                          JSON.parse(localStorage.getItem('holidayFuel_v4.6')) || [];
 
         async function init() {
             applyTheme();
@@ -370,7 +378,7 @@
 
         function switchTab(tabName) {
             currentTab = tabName;
-            localStorage.setItem('activeTab_v4.6', tabName);
+            localStorage.setItem('activeTab_v4.7', tabName);
             
             const header = document.getElementById('main-header');
             header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
@@ -429,7 +437,7 @@
         function updateDashboard() {
             const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
             const limitUsd = bankrollGbp * exchangeRate;
-            const burnPercent = (totalActualUsd / limitUsd) * 100;
+            const burnPercent = limitUsd > 0 ? (totalActualUsd / limitUsd) * 100 : 0;
 
             document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
             document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
@@ -475,7 +483,7 @@
                 const actualGbp = (actualUsd / exchangeRate).toFixed(0);
                 const diffGbp = (diffUsd / exchangeRate).toFixed(0);
 
-                const statusBorder = actualUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
+                const statusBorder = actualUsd === 0 && plannedUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
                 const diffEmoji = actualUsd > 0 ? (diffUsd >= 0 ? '🥳' : '😬') : '';
 
                 return `
@@ -602,7 +610,7 @@
         function saveAdminSettings() {
             bankrollGbp = document.getElementById('input-gbp-limit').value;
             localStorage.setItem('bankrollGbp', bankrollGbp);
-            localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.7', JSON.stringify(tripData));
             switchTab('Home');
         }
 
@@ -623,18 +631,44 @@
             }
         }
 
+        // NEW: WIPE FOR SHARING
+        function wipeForSharing() {
+            if(confirm("⚠️ Share Mode Reset: This will wipe ALL budgets, spent amounts, and custom activity notes. Only the dates and locations will remain. Use this before sharing the app template. Proceed?")) {
+                
+                tripData = tripData.map(item => ({
+                    day: item.day,
+                    loc: item.loc,
+                    activity: "", 
+                    cat: "🛍️ Mixed",
+                    usd: 0,
+                    spent: 0
+                }));
+                
+                fuelEntries = [];
+                bankrollGbp = 0;
+                document.getElementById('input-gbp-limit').value = 0;
+
+                localStorage.setItem('holidayBudget_v4.7', JSON.stringify(tripData));
+                localStorage.setItem('holidayFuel_v4.7', JSON.stringify(fuelEntries));
+                localStorage.setItem('bankrollGbp', bankrollGbp);
+
+                alert("✅ App wiped cleanly. It is now safe to share this template.");
+                window.location.reload(true);
+            }
+        }
+
         function factoryReset() {
-            if(confirm("⚠️ WARNING: This will wipe ALL your entered spent amounts, fuel logs, and custom notes. The itinerary will be reset to the original template. Are you absolutely sure?")) {
-                localStorage.removeItem('holidayBudget_v4.6');
-                localStorage.removeItem('holidayFuel_v4.6');
+            if(confirm("⚠️ WARNING: This will restore the default original itinerary (with pre-filled notes). Are you sure?")) {
+                localStorage.removeItem('holidayBudget_v4.7');
+                localStorage.removeItem('holidayFuel_v4.7');
                 
                 tripData = JSON.parse(JSON.stringify(defaultData));
                 fuelEntries = [];
                 
-                localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
-                localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayBudget_v4.7', JSON.stringify(tripData));
+                localStorage.setItem('holidayFuel_v4.7', JSON.stringify(fuelEntries));
                 
-                alert("✅ Data has been reset to factory defaults.");
+                alert("✅ Data has been reset to original factory defaults.");
                 window.location.reload(true);
             }
         }
@@ -677,7 +711,7 @@
             if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
             fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-            localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
+            localStorage.setItem('holidayFuel_v4.7', JSON.stringify(fuelEntries));
             
             document.getElementById('new-fuel-usd').value = '';
             renderLocalFuelList(editingFuelLoc);
@@ -687,7 +721,7 @@
         function deleteFuelEntry(id) {
             if(confirm("Remove this fuel entry?")) {
                 fuelEntries = fuelEntries.filter(e => e.id !== id);
-                localStorage.setItem('holidayFuel_v4.6', JSON.stringify(fuelEntries));
+                localStorage.setItem('holidayFuel_v4.7', JSON.stringify(fuelEntries));
                 
                 if(editingFuelLoc) {
                     renderLocalFuelList(editingFuelLoc);
@@ -699,7 +733,6 @@
             }
         }
 
-        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleLocalFuelModal(show) {
             const m = document.getElementById('local-fuel-modal');
             if (show) {
@@ -738,7 +771,6 @@
             toggleGlobalFuelModal(true);
         }
 
-        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleGlobalFuelModal(show) {
             const m = document.getElementById('global-fuel-modal');
             if (show) {
@@ -772,7 +804,7 @@
             tripData[editingIndex].spent = spent;
             tripData[editingIndex].activity = document.getElementById('edit-activity').value;
             
-            localStorage.setItem('holidayBudget_v4.6', JSON.stringify(tripData));
+            localStorage.setItem('holidayBudget_v4.7', JSON.stringify(tripData));
 
             if(spent > usd && usd > 0) {
                 const modalCard = document.getElementById('modal-card');
@@ -792,7 +824,6 @@
             }
         }
 
-        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleModal(show) {
             const m = document.getElementById('modal');
             if (show) {
