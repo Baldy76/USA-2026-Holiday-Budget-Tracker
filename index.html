@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v4.6.0</title>
+    <title>USA Trip Tracker v4.6.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -210,8 +210,7 @@
                         <thead class="text-[9px] uppercase font-black text-slate-500 border-b border-slate-700">
                             <tr><th class="pb-2">Date</th><th class="pb-2 text-right">Amount ($)</th><th class="pb-2"></th></tr>
                         </thead>
-                        <tbody id="local-fuel-list" class="divide-y divide-slate-800/50">
-                            </tbody>
+                        <tbody id="local-fuel-list" class="divide-y divide-slate-800/50"></tbody>
                         <tfoot class="border-t border-slate-600 font-black text-white">
                             <tr><td class="pt-2 text-right text-[10px] uppercase text-slate-400">Total</td><td class="pt-2 text-right" id="local-fuel-total">$0</td><td></td></tr>
                         </tfoot>
@@ -252,8 +251,7 @@
                         <thead class="text-[9px] uppercase font-black text-slate-500 border-b border-slate-700 sticky top-0 bg-slate-900">
                             <tr><th class="pb-2">Date</th><th class="pb-2">Loc</th><th class="pb-2 text-right">Amount ($)</th></tr>
                         </thead>
-                        <tbody id="global-fuel-list" class="divide-y divide-slate-800/50">
-                            </tbody>
+                        <tbody id="global-fuel-list" class="divide-y divide-slate-800/50"></tbody>
                         <tfoot class="border-t border-slate-600 font-black text-white bg-slate-900 sticky bottom-0">
                             <tr>
                                 <td colspan="2" class="pt-3 pb-1 text-right text-[10px] uppercase text-slate-400 pr-4">Grand Total</td>
@@ -279,7 +277,7 @@
         let editingIndex = null;
         let editingFuelLoc = null;
 
-        // --- NEW: SCROLL LOCK LOGIC ---
+        // SCROLL LOCK LOGIC
         let scrollPosition = 0;
 
         function lockScroll() {
@@ -295,7 +293,6 @@
             document.body.style.width = '';
             window.scrollTo(0, scrollPosition);
         }
-        // ------------------------------
 
         const defaultData = [
             { day: "Mon 20-Jul", loc: "LA", activity: "Pizza", cat: "🍔 Food", usd: 50, spent: 0 },
@@ -702,13 +699,16 @@
             }
         }
 
+        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleLocalFuelModal(show) {
             const m = document.getElementById('local-fuel-modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
                 lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
                 unlockScroll();
             }
         }
@@ -738,18 +738,20 @@
             toggleGlobalFuelModal(true);
         }
 
+        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleGlobalFuelModal(show) {
             const m = document.getElementById('global-fuel-modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
                 lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
                 unlockScroll();
             }
         }
 
-        // ACTIVITY EDIT LOGIC
         function openEdit(index) {
             editingIndex = index;
             const item = tripData[index];
@@ -790,13 +792,16 @@
             }
         }
 
+        // HOTFIX: Added back document.body.classList add/remove for 'modal-active'
         function toggleModal(show) {
             const m = document.getElementById('modal');
             if (show) {
                 m.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.classList.add('modal-active');
                 lockScroll();
             } else {
                 m.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('modal-active');
                 unlockScroll();
             }
         }
