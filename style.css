@@ -3,14 +3,53 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* --- NEW: OS THEME SEGMENTED CONTROL --- */
+:root {
+    --seg-bg: #e2e8f0;
+    --seg-card: #ffffff;
+    --seg-text: #0f172a;
+    --seg-shadow: rgba(0, 0, 0, 0.05);
+}
+body.dark {
+    --seg-bg: #0f172a;
+    --seg-card: #1e293b;
+    --seg-text: #f8fafc;
+    --seg-shadow: rgba(0, 0, 0, 0.3);
+}
+.theme-segmented-control { 
+    display: flex; 
+    background: var(--seg-bg); 
+    border-radius: 12px; 
+    padding: 4px; 
+    width: 100%;
+    margin-top: 12px;
+}
+.segment { 
+    flex: 1; 
+    background: transparent; 
+    border: none; 
+    padding: 10px; 
+    border-radius: 8px;
+    font-size: 14px; 
+    font-weight: 600; 
+    color: var(--seg-text); 
+    cursor: pointer; 
+    transition: 0.2s; 
+}
+.segment.active { 
+    background: var(--seg-card); 
+    box-shadow: 0 2px 8px var(--seg-shadow); 
+}
+
 /* --- THE VIBE: AMBIENT BACKGROUNDS --- */
-body { transition: background 0.8s ease, color 0.3s ease; }
+body { transition: background 0.8s ease, color 0.3s ease; background-color: #f1f5f9; }
 body.ambient-home { background-color: #f1f5f9; }
 body.ambient-la { background: radial-gradient(circle at top right, #ffedd5 0%, #f1f5f9 60%); }
 body.ambient-utah { background: radial-gradient(circle at top left, #ffedd5 0%, #f1f5f9 60%); }
 body.ambient-vegas { background: radial-gradient(circle at bottom right, #f3e8ff 0%, #f1f5f9 60%); }
 body.ambient-admin { background-color: #e2e8f0; }
 
+body.dark { background-color: #020617; color: #f8fafc; }
 body.dark.ambient-home { background-color: #020617; color: #f8fafc; }
 body.dark.ambient-la { background: radial-gradient(circle at top right, #431407 0%, #020617 60%); color: #f8fafc; }
 body.dark.ambient-utah { background: radial-gradient(circle at top left, #450a0a 0%, #020617 60%); color: #f8fafc; }
