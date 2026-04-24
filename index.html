@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>USA Trip Tracker v5.3.0</title>
-    
+    <title>USA Trip Tracker v5.4.0</title>
     <meta name="theme-color" content="#f1f5f9" id="theme-meta">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -19,9 +17,12 @@
     <header id="main-header" class="theme-home sticky top-0 z-30 transition-all duration-500 shadow-md">
         <div class="max-w-6xl mx-auto p-6 pb-5">
             <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
-                    <p id="view-title" class="text-white/90 text-[10px] uppercase font-black tracking-[0.2em]">Master Budget</p>
+                <div class="flex items-center gap-3">
+                    <div>
+                        <h1 class="text-2xl font-black text-white tracking-tighter">USA '26</h1>
+                        <p id="view-title" class="text-white/90 text-[10px] uppercase font-black tracking-[0.2em]">Master Budget</p>
+                    </div>
+                    <span id="backup-badge" class="hidden bg-rose-500 text-white text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full animate-pulse shadow-lg shadow-rose-500/50">🛟 Reserve Active</span>
                 </div>
                 <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/30 text-white shadow-sm">
                     <p class="text-[8px] font-black uppercase opacity-80 leading-none mb-1">Live Rate</p>
@@ -108,12 +109,30 @@
                     </div>
 
                     <div class="p-6 bg-surface-alt rounded-3xl border border-surface">
-                        <p class="text-[10px] font-black text-mute uppercase mb-4 tracking-widest">Master Budget (£)</p>
-                        <div class="relative mb-4">
+                        <p class="text-[10px] font-black text-mute uppercase mb-4 tracking-widest">1. Master Budget (£)</p>
+                        <div class="relative mb-6">
                             <span class="absolute left-5 top-4 text-indigo-600 font-black text-xl">£</span>
                             <input type="number" id="input-gbp-limit" class="admin-input-premium shadow-inner" placeholder="5000">
                         </div>
-                        <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600">Save Budget</button>
+                        
+                        <div class="border-t border-slate-200 dark:border-slate-700 pt-6 mb-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <p class="text-[10px] font-black text-mute uppercase tracking-widest">2. Emergency Reserve (£)</p>
+                                    <p class="text-[9px] font-bold text-slate-400 mt-1">Kept out of app math until ON</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer active:scale-95 transition-transform">
+                                  <input type="checkbox" id="backup-toggle" class="sr-only peer">
+                                  <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:bg-rose-500 shadow-inner after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-5 top-4 text-rose-500 font-black text-xl">£</span>
+                                <input type="number" id="input-backup-gbp" class="admin-input-premium shadow-inner border-rose-100 dark:border-rose-900/30" placeholder="1000">
+                            </div>
+                        </div>
+
+                        <button onclick="saveAdminSettings()" class="btn-action bg-indigo-600 shadow-lg shadow-indigo-500/30 mt-2">Save Financials</button>
                     </div>
 
                     <div class="p-6 bg-surface-alt rounded-3xl border border-surface grid gap-3">
@@ -144,7 +163,7 @@
                 </div>
                 
                 <div class="mt-8 text-center opacity-60">
-                    <p class="text-[10px] font-black font-mono text-mute tracking-widest uppercase">Version 5.3.0</p>
+                    <p class="text-[10px] font-black font-mono text-mute tracking-widest uppercase">Version 5.4.0</p>
                 </div>
             </section>
         </div>
