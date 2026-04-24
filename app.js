@@ -1,11 +1,11 @@
 /**
  * USA 2026 Holiday Budget Tracker 
- * Version 5.1.0 Engine
+ * Version 5.2.0 Engine
  */
 
 const API_URL = "https://open.er-api.com/v6/latest/GBP";
 let exchangeRate = 1.35; 
-let currentTab = localStorage.getItem('activeTab_v5.1') || 'Home';
+let currentTab = localStorage.getItem('activeTab_v5.2') || localStorage.getItem('activeTab_v5.1') || 'Home';
 let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
 let isDarkMode = localStorage.getItem('vegasMode') === 'true';
 let editingIndex = null;
@@ -57,13 +57,13 @@ const defaultData = [
     { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
 ];
 
-let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.1')) || 
-               JSON.parse(localStorage.getItem('holidayBudget_v5.0')) || 
+let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.2')) || 
+               JSON.parse(localStorage.getItem('holidayBudget_v5.1')) || 
                JSON.parse(JSON.stringify(defaultData));
 tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.1')) || 
-                  JSON.parse(localStorage.getItem('holidayFuel_v5.0')) || [];
+let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.2')) || 
+                  JSON.parse(localStorage.getItem('holidayFuel_v5.1')) || [];
 
 async function init() {
     applyTheme();
@@ -113,7 +113,7 @@ function animateValue(objId, end, duration = 800) {
 function switchTab(tabName, withHaptic = true) {
     if(withHaptic) triggerHaptic('light');
     currentTab = tabName;
-    localStorage.setItem('activeTab_v5.1', tabName);
+    localStorage.setItem('activeTab_v5.2', tabName);
     
     const header = document.getElementById('main-header');
     header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()} shadow-md`;
@@ -189,31 +189,6 @@ function updateDashboard() {
     const totalGlobalFuel = fuelEntries.reduce((s, e) => s + e.usd, 0);
     animateValue('fuel-usd', Math.round(totalGlobalFuel));
     document.getElementById('fuel-gbp').innerText = `£${Math.round(totalGlobalFuel / exchangeRate)}`;
-
-    const catColors = { '🍔 Food': 'bg-amber-500', '🚕 Transport': 'bg-blue-500', '🎢 Fun': 'bg-pink-500', '🛍️ Mixed': 'bg-violet-500', '🏨 Stay': 'bg-emerald-500' };
-    let catTotals = {};
-    tripData.forEach(i => { if(i.spent > 0) catTotals[i.cat] = (catTotals[i.cat] || 0) + i.spent; });
-
-    let insightsBarHtml = '';
-    let insightsLegendHtml = '';
-    
-    if(totalActualUsd > 0) {
-        Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).forEach(([cat, amount]) => {
-            const pct = (amount / totalActualUsd) * 100;
-            const color = catColors[cat] || 'bg-slate-500';
-            insightsBarHtml += `<div class="${color} h-full transition-all duration-1000" style="width: ${pct}%"></div>`;
-            insightsLegendHtml += `
-            <div class="flex items-center justify-between bg-surface-alt p-3 rounded-xl border border-surface">
-                <span class="text-[10px] font-bold text-primary truncate">${cat}</span>
-                <span class="text-[11px] font-black text-mute">${Math.round(pct)}%</span>
-            </div>`;
-        });
-    } else {
-        insightsBarHtml = `<div class="bg-slate-200 dark:bg-slate-700 h-full w-full"></div>`;
-        insightsLegendHtml = `<p class="text-xs text-mute text-center w-full col-span-2 py-2">Start spending to see insights!</p>`;
-    }
-    document.getElementById('insights-bar').innerHTML = insightsBarHtml;
-    document.getElementById('insights-legend').innerHTML = insightsLegendHtml;
 
     const locs = { 'LA': '🌴', 'Utah': '🏔️', 'Vegas': '🎰' };
     const regionalContainer = document.getElementById('regional-stats');
@@ -358,7 +333,7 @@ function saveAdminSettings() {
     triggerHaptic('heavy');
     bankrollGbp = document.getElementById('input-gbp-limit').value;
     localStorage.setItem('bankrollGbp', bankrollGbp);
-    localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.2', JSON.stringify(tripData));
     switchTab('Home');
 }
 
@@ -370,8 +345,8 @@ function wipeForSharing() {
         }));
         fuelEntries = []; bankrollGbp = 0;
         document.getElementById('input-gbp-limit').value = 0;
-        localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayBudget_v5.2', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.2', JSON.stringify(fuelEntries));
         localStorage.setItem('bankrollGbp', bankrollGbp);
         window.location.reload(true);
     }
@@ -380,12 +355,12 @@ function wipeForSharing() {
 function factoryReset() {
     triggerHaptic('error');
     if(confirm("⚠️ WARNING: This will restore the default original itinerary (with pre-filled notes). Are you sure?")) {
-        localStorage.removeItem('holidayBudget_v5.1');
-        localStorage.removeItem('holidayFuel_v5.1');
+        localStorage.removeItem('holidayBudget_v5.2');
+        localStorage.removeItem('holidayFuel_v5.2');
         tripData = JSON.parse(JSON.stringify(defaultData));
         fuelEntries = [];
-        localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayBudget_v5.2', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.2', JSON.stringify(fuelEntries));
         window.location.reload(true);
     }
 }
@@ -427,7 +402,7 @@ function addLocalFuel() {
     if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
     fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-    localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
+    localStorage.setItem('holidayFuel_v5.2', JSON.stringify(fuelEntries));
     
     document.getElementById('new-fuel-usd').value = '';
     renderLocalFuelList(editingFuelLoc);
@@ -438,7 +413,7 @@ function deleteFuelEntry(id) {
     if(confirm("Remove this fuel entry?")) {
         triggerHaptic('heavy');
         fuelEntries = fuelEntries.filter(e => e.id !== id);
-        localStorage.setItem('holidayFuel_v5.1', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayFuel_v5.2', JSON.stringify(fuelEntries));
         
         if(editingFuelLoc) {
             renderLocalFuelList(editingFuelLoc);
@@ -522,7 +497,7 @@ function saveChanges() {
     tripData[editingIndex].spent = spent;
     tripData[editingIndex].activity = document.getElementById('edit-activity').value;
     
-    localStorage.setItem('holidayBudget_v5.1', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.2', JSON.stringify(tripData));
 
     if(spent > usd && usd > 0) {
         triggerHaptic('error');
