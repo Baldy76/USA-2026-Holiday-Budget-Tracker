@@ -1,25 +1,33 @@
 /**
  * USA 2026 Holiday Budget Tracker 
- * Version 4.8.0 Core Engine
+ * Version 5.0.0 "The Vibe Update" Engine
  */
 
 const API_URL = "https://open.er-api.com/v6/latest/GBP";
 let exchangeRate = 1.35; 
-let currentTab = localStorage.getItem('activeTab_v4.8') || 'Home';
+let currentTab = localStorage.getItem('activeTab_v5.0') || 'Home';
 let bankrollGbp = localStorage.getItem('bankrollGbp') || 5000;
 let isDarkMode = localStorage.getItem('vegasMode') === 'true';
 let editingIndex = null;
 let editingFuelLoc = null;
 
-let scrollPosition = 0;
+// --- HAPTIC FEEDBACK ENGINE ---
+function triggerHaptic(type = 'light') {
+    if (!navigator.vibrate) return;
+    if (type === 'light') navigator.vibrate(30);
+    if (type === 'heavy') navigator.vibrate([40, 30, 40]);
+    if (type === 'success') navigator.vibrate([30, 50, 30, 50, 40]);
+    if (type === 'error') navigator.vibrate([60, 40, 60]);
+}
 
+// --- SCROLL LOCK LOGIC ---
+let scrollPosition = 0;
 function lockScroll() {
     scrollPosition = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollPosition}px`;
     document.body.style.width = '100%';
 }
-
 function unlockScroll() {
     document.body.style.position = '';
     document.body.style.top = '';
@@ -49,20 +57,20 @@ const defaultData = [
     { day: "Fri 07-Aug", loc: "Home", activity: "Flight Home", cat: "🚕 Transport", usd: 0, spent: 0 }
 ];
 
-let tripData = JSON.parse(localStorage.getItem('holidayBudget_v4.8')) || 
-               JSON.parse(localStorage.getItem('holidayBudget_v4.7')) || 
+let tripData = JSON.parse(localStorage.getItem('holidayBudget_v5.0')) || 
+               JSON.parse(localStorage.getItem('holidayBudget_v4.8')) || 
                JSON.parse(JSON.stringify(defaultData));
 tripData = tripData.map(item => ({...item, cat: item.cat || "🛍️ Mixed"}));
 
-let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v4.8')) || 
-                  JSON.parse(localStorage.getItem('holidayFuel_v4.7')) || [];
+let fuelEntries = JSON.parse(localStorage.getItem('holidayFuel_v5.0')) || 
+                  JSON.parse(localStorage.getItem('holidayFuel_v4.8')) || [];
 
 async function init() {
     applyTheme();
     await fetchRates();
     document.getElementById('input-gbp-limit').value = bankrollGbp;
     document.getElementById('dark-mode-toggle').checked = isDarkMode;
-    switchTab(currentTab);
+    switchTab(currentTab, false); // false prevents haptic on initial load
 }
 
 function applyTheme() {
@@ -71,6 +79,7 @@ function applyTheme() {
 }
 
 function toggleDarkMode() {
+    triggerHaptic('light');
     isDarkMode = document.getElementById('dark-mode-toggle').checked;
     localStorage.setItem('vegasMode', isDarkMode);
     applyTheme();
@@ -101,12 +110,17 @@ function animateValue(objId, end, duration = 800) {
     window.requestAnimationFrame(step);
 }
 
-function switchTab(tabName) {
+function switchTab(tabName, withHaptic = true) {
+    if(withHaptic) triggerHaptic('light');
     currentTab = tabName;
-    localStorage.setItem('activeTab_v4.8', tabName);
+    localStorage.setItem('activeTab_v5.0', tabName);
     
     const header = document.getElementById('main-header');
-    header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()}`;
+    header.className = `sticky top-0 z-30 transition-all duration-500 theme-${tabName.toLowerCase()} shadow-md`;
+    
+    // AMBIENT BACKGROUND LOGIC
+    document.body.className = `bg-slate-100 text-slate-900 no-scrollbar transition-all duration-700 ease-in-out ambient-${tabName.toLowerCase()}`;
+    applyTheme(); // Re-apply dark mode to the new base string
     
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     if(document.getElementById(`nav-${tabName}`)) document.getElementById(`nav-${tabName}`).classList.add('active');
@@ -155,17 +169,23 @@ function updateHeaderStats(tabName) {
     document.getElementById('stat-remain-gbp').innerText = `£${Math.round(leftUsd / exchangeRate)}`;
     
     const pill = document.getElementById('remain-pill');
-    if (leftUsd < 0) pill.className = "header-stat-pill bg-rose-500/90 border-rose-400 transition-colors";
-    else pill.className = "header-stat-pill bg-white/30 border-white/50 transition-colors";
+    if (leftUsd < 0) pill.className = "header-stat-pill bg-rose-500/90 border-rose-400 transition-colors duration-500";
+    else pill.className = "header-stat-pill bg-white/30 border-white/50 transition-colors duration-500";
 }
 
 function updateDashboard() {
     const totalActualUsd = tripData.reduce((s, i) => s + parseFloat(i.spent || 0), 0);
     const limitUsd = bankrollGbp * exchangeRate;
     const burnPercent = limitUsd > 0 ? (totalActualUsd / limitUsd) * 100 : 0;
+    const cappedPercent = Math.min(burnPercent, 100);
 
     document.getElementById('burn-percent').innerText = `${Math.round(burnPercent)}%`;
-    document.getElementById('burn-progress').style.width = `${Math.min(burnPercent, 100)}%`;
+    document.getElementById('burn-progress').style.width = `${cappedPercent}%`;
+    
+    // CAR ANIMATION
+    setTimeout(() => {
+        document.getElementById('burn-car').style.left = `${cappedPercent}%`;
+    }, 100);
 
     const totalGlobalFuel = fuelEntries.reduce((s, e) => s + e.usd, 0);
     animateValue('fuel-usd', Math.round(totalGlobalFuel));
@@ -198,7 +218,7 @@ function updateDashboard() {
 
     const locs = { 'LA': '🌴', 'Utah': '🏔️', 'Vegas': '🎰' };
     const regionalContainer = document.getElementById('regional-stats');
-    regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon]) => {
+    regionalContainer.innerHTML = Object.entries(locs).map(([loc, icon], index) => {
         const data = tripData.filter(d => d.loc === loc);
         const plannedUsd = data.reduce((s, i) => s + i.usd, 0);
         const actualUsd = data.reduce((s, i) => s + i.spent, 0);
@@ -208,19 +228,20 @@ function updateDashboard() {
         const actualGbp = (actualUsd / exchangeRate).toFixed(0);
         const diffGbp = (diffUsd / exchangeRate).toFixed(0);
 
-        const statusBorder = actualUsd === 0 && plannedUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-red-400 dark:border-red-600');
+        const statusBorder = actualUsd === 0 && plannedUsd === 0 ? 'border-surface-alt' : (diffUsd >= 0 ? 'border-green-400 dark:border-green-600' : 'border-rose-500 dark:border-rose-600');
         const diffEmoji = actualUsd > 0 ? (diffUsd >= 0 ? '🥳' : '😬') : '';
 
+        // Added stagger animation to regional cards
         return `
-        <div class="surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-lg shadow-slate-200/40 dark:shadow-none transition-colors border border-surface">
+        <div class="animate-ticket surface-card p-5 rounded-[30px] border-l-8 ${statusBorder} shadow-lg shadow-slate-200/40 dark:shadow-none transition-colors border border-surface glass-panel" style="animation-delay: ${index * 0.15}s;">
             <div class="flex justify-between items-center mb-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">${icon}</span>
+                    <span class="text-xl drop-shadow-md">${icon}</span>
                     <p class="text-[11px] font-black uppercase tracking-widest text-mute">${loc}</p>
                 </div>
                 <div class="text-right">
                      <p class="text-[8px] font-black text-mute uppercase mb-0.5">Balance ${diffEmoji}</p>
-                     <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${diffGbp}</span></p>
+                     <p class="text-sm font-black ${diffUsd >= 0 ? 'text-green-600 dark:text-green-400' : 'text-rose-600 dark:text-rose-400'}">$${diffUsd} <span class="text-[10px] opacity-40">/ £${diffGbp}</span></p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4 border-t border-surface pt-3">
@@ -242,12 +263,11 @@ let touchEndX = 0;
 function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
 function handleTouchEnd(e, index) {
     touchEndX = e.changedTouches[0].screenX;
-    if (touchStartX - touchEndX > 60) openEdit(index); 
+    if (touchStartX - touchEndX > 60) {
+        triggerHaptic('light');
+        openEdit(index); 
+    }
 }
-
-// Ensure the functions are on the window object for inline HTML event handlers
-window.handleTouchStart = handleTouchStart;
-window.handleTouchEnd = handleTouchEnd;
 
 function renderGrid(filter) {
     const fuelContainer = document.getElementById('location-fuel-container');
@@ -256,9 +276,9 @@ function renderGrid(filter) {
     const locFuelTotal = fuelEntries.filter(e => e.loc === filter).reduce((s, e) => s + e.usd, 0);
 
     fuelContainer.innerHTML = `
-        <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-md flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors mb-6 cursor-pointer active:scale-95" onclick="openFuelEdit('${filter}')">
+        <div class="p-5 rounded-[32px] border-2 border-slate-700 shadow-xl flex justify-between items-center bg-slate-800 dark:bg-slate-900 transition-colors mb-6 cursor-pointer active:scale-95 hover:bg-slate-700" onclick="openFuelEdit('${filter}')">
             <div class="flex items-center gap-3">
-                <div class="bg-slate-700 p-3 rounded-2xl text-2xl shadow-inner">⛽</div>
+                <div class="bg-slate-700 p-3 rounded-2xl text-2xl shadow-inner border border-slate-600">⛽</div>
                 <div>
                     <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Hire Car Fuel</p>
                     <p class="text-sm font-bold text-white">Log & Add</p>
@@ -269,7 +289,7 @@ function renderGrid(filter) {
                     <p class="text-2xl font-black text-white leading-none">$${locFuelTotal}</p>
                     <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">£${(locFuelTotal/exchangeRate).toFixed(0)}</p>
                 </div>
-                <div class="bg-indigo-500 text-white p-2 rounded-xl">
+                <div class="bg-indigo-500 shadow-lg shadow-indigo-500/30 text-white p-2 rounded-xl">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 </div>
             </div>
@@ -277,7 +297,7 @@ function renderGrid(filter) {
     `;
 
     const data = tripData.filter(d => d.loc === filter);
-    grid.innerHTML = data.map((item) => {
+    grid.innerHTML = data.map((item, loopIndex) => {
         const globalIndex = tripData.findIndex(d => d.day === item.day);
         let dayName = "Day", dayNum = "00", month = "MTH";
         if(item.day.includes(' ')) {
@@ -290,15 +310,16 @@ function renderGrid(filter) {
             } else { dayNum = parts[1]; }
         }
 
+        // Staggered Animation
         return `
-        <div class="ticket-card surface-card" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
+        <div class="ticket-card surface-card animate-ticket" style="animation-delay: ${(loopIndex * 0.1) + 0.1}s;" ontouchstart="handleTouchStart(event)" ontouchend="handleTouchEnd(event, ${globalIndex})">
             <div class="absolute inset-y-0 right-0 bg-indigo-500 w-16 rounded-r-[32px] flex items-center justify-center -z-10 opacity-0 transition-opacity">
-                <span class="text-white text-xs font-bold -rotate-90 tracking-widest">EDIT</span>
+                <span class="text-white text-xs font-bold -rotate-90 tracking-widest">SWIPE</span>
             </div>
             
-            <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col shadow-lg border-2 border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div class="p-5 flex gap-4 items-center relative bg-white dark:bg-slate-800">
-                    <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-md shadow-indigo-500/20 text-white border border-indigo-400/30">
+            <div class="ticket-content bg-surface rounded-[32px] transition-transform flex flex-col shadow-lg border-2 border-slate-200 dark:border-slate-700 overflow-hidden glass-panel">
+                <div class="p-5 flex gap-4 items-center relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+                    <div class="flex-shrink-0 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-2xl p-2 w-14 text-center shadow-md shadow-indigo-500/30 text-white border border-indigo-400/30">
                         <p class="text-[8px] font-black uppercase opacity-90">${month}</p>
                         <p class="text-2xl font-black leading-none my-0.5 tracking-tighter drop-shadow-md">${dayNum}</p>
                         <p class="text-[8px] font-black uppercase opacity-90">${dayName}</p>
@@ -306,28 +327,28 @@ function renderGrid(filter) {
                     
                     <div class="flex-grow">
                         <div class="flex justify-between items-start mb-1.5">
-                            <span class="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded-md text-[8px] font-black tracking-widest uppercase">${item.cat}</span>
-                            <button onclick="openEdit(${globalIndex})" class="text-slate-300 dark:text-slate-500 hover:text-indigo-500 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
+                            <span class="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-1 rounded-md text-[8px] font-black tracking-widest uppercase shadow-sm">${item.cat}</span>
+                            <button onclick="triggerHaptic(); openEdit(${globalIndex})" class="text-slate-300 dark:text-slate-500 hover:text-indigo-500 active:scale-90 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 drop-shadow-sm"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
                             </button>
                         </div>
                         <p class="text-sm font-black text-primary leading-tight line-clamp-2 mt-1">"${item.activity}"</p>
                     </div>
                 </div>
 
-                <div class="relative flex items-center bg-indigo-50/60 dark:bg-indigo-900/20">
-                    <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-r-full border-y-2 border-r-2 border-slate-200 dark:border-slate-700 -ml-[2px]"></div>
+                <div class="relative flex items-center bg-indigo-50/80 dark:bg-indigo-900/30 backdrop-blur-sm">
+                    <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-r-full border-y-2 border-r-2 border-slate-200 dark:border-slate-700 -ml-[2px] transition-colors duration-700 theme-hole"></div>
                     <div class="flex-grow border-t-2 border-dashed border-indigo-200 dark:border-indigo-800 mx-2"></div>
-                    <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-l-full border-y-2 border-l-2 border-slate-200 dark:border-slate-700 -mr-[2px]"></div>
+                    <div class="h-6 w-3 bg-slate-100 dark:bg-[#020617] rounded-l-full border-y-2 border-l-2 border-slate-200 dark:border-slate-700 -mr-[2px] transition-colors duration-700 theme-hole"></div>
                 </div>
 
-                <div class="p-5 pt-3 pb-6 bg-indigo-50/60 dark:bg-indigo-900/20 grid grid-cols-2 gap-4 items-center">
+                <div class="p-5 pt-3 pb-6 bg-indigo-50/80 dark:bg-indigo-900/30 backdrop-blur-sm grid grid-cols-2 gap-4 items-center">
                     <div>
-                        <span class="inline-block bg-indigo-200/50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-indigo-300/30">Goal Plan</span>
+                        <span class="inline-block bg-indigo-200/60 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-indigo-300/40 shadow-sm">Goal Plan</span>
                         <p class="text-xl font-black text-indigo-900 dark:text-indigo-100">$${item.usd}</p>
                     </div>
-                    <div class="text-right border-l-2 border-indigo-200/50 dark:border-indigo-800 pl-4">
-                        <span class="inline-block bg-emerald-200/50 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-emerald-300/30">Actual Spend</span>
+                    <div class="text-right border-l-2 border-indigo-200/60 dark:border-indigo-800 pl-4">
+                        <span class="inline-block bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-400 px-2 py-0.5 rounded text-[8px] font-black uppercase mb-1 border border-emerald-300/40 shadow-sm">Actual Spend</span>
                         <p class="text-xl font-black text-emerald-600 dark:text-emerald-400">$${item.spent}</p>
                     </div>
                 </div>
@@ -337,66 +358,37 @@ function renderGrid(filter) {
 }
 
 function saveAdminSettings() {
+    triggerHaptic('heavy');
     bankrollGbp = document.getElementById('input-gbp-limit').value;
     localStorage.setItem('bankrollGbp', bankrollGbp);
-    localStorage.setItem('holidayBudget_v4.8', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
     switchTab('Home');
 }
 
-async function systemSync() {
-    await fetchRates();
-    updateDashboard();
-    updateHeaderStats(currentTab);
-    alert("🚀 Live Rates Synced.");
-}
-
-function forceAppUpdate() {
-    if(confirm("Force App Update? This clears the cache to pull new code.")) {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
-        }
-        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
-              .then(() => window.location.reload(true));
-    }
-}
-
 function wipeForSharing() {
+    triggerHaptic('error');
     if(confirm("⚠️ Share Mode Reset: This will wipe ALL budgets, spent amounts, and custom activity notes. Only the dates and locations will remain. Use this before sharing the app template. Proceed?")) {
-        
         tripData = tripData.map(item => ({
-            day: item.day,
-            loc: item.loc,
-            activity: "", 
-            cat: "🛍️ Mixed",
-            usd: 0,
-            spent: 0
+            day: item.day, loc: item.loc, activity: "", cat: "🛍️ Mixed", usd: 0, spent: 0
         }));
-        
-        fuelEntries = [];
-        bankrollGbp = 0;
+        fuelEntries = []; bankrollGbp = 0;
         document.getElementById('input-gbp-limit').value = 0;
-
-        localStorage.setItem('holidayBudget_v4.8', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v4.8', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
         localStorage.setItem('bankrollGbp', bankrollGbp);
-
-        alert("✅ App wiped cleanly. It is now safe to share this template.");
         window.location.reload(true);
     }
 }
 
 function factoryReset() {
+    triggerHaptic('error');
     if(confirm("⚠️ WARNING: This will restore the default original itinerary (with pre-filled notes). Are you sure?")) {
-        localStorage.removeItem('holidayBudget_v4.8');
-        localStorage.removeItem('holidayFuel_v4.8');
-        
+        localStorage.removeItem('holidayBudget_v5.0');
+        localStorage.removeItem('holidayFuel_v5.0');
         tripData = JSON.parse(JSON.stringify(defaultData));
         fuelEntries = [];
-        
-        localStorage.setItem('holidayBudget_v4.8', JSON.stringify(tripData));
-        localStorage.setItem('holidayFuel_v4.8', JSON.stringify(fuelEntries));
-        
-        alert("✅ Data has been reset to original factory defaults.");
+        localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
+        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
         window.location.reload(true);
     }
 }
@@ -404,7 +396,6 @@ function factoryReset() {
 function renderLocalFuelList(loc) {
     const listData = fuelEntries.filter(e => e.loc === loc);
     const total = listData.reduce((s, e) => s + e.usd, 0);
-    
     const tbody = document.getElementById('local-fuel-list');
     if (listData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-500 text-xs">No entries yet.</td></tr>`;
@@ -414,7 +405,7 @@ function renderLocalFuelList(loc) {
                 <td class="py-2.5 font-medium">${e.date}</td>
                 <td class="py-2.5 text-right font-black text-white">$${e.usd}</td>
                 <td class="py-2.5 text-right pl-2">
-                    <button onclick="deleteFuelEntry(${e.id})" class="text-rose-500 hover:text-rose-400">🗑️</button>
+                    <button onclick="triggerHaptic('light'); deleteFuelEntry(${e.id})" class="text-rose-500 hover:text-rose-400 active:scale-90">🗑️</button>
                 </td>
             </tr>
         `).join('');
@@ -423,6 +414,7 @@ function renderLocalFuelList(loc) {
 }
 
 function openFuelEdit(loc) {
+    triggerHaptic('light');
     editingFuelLoc = loc;
     document.getElementById('local-fuel-modal-title').innerText = `${loc} Fuel Log`;
     document.getElementById('new-fuel-date').value = new Date().toISOString().split('T')[0];
@@ -432,13 +424,13 @@ function openFuelEdit(loc) {
 }
 
 function addLocalFuel() {
+    triggerHaptic('success');
     const dateVal = document.getElementById('new-fuel-date').value || "Undated";
     const amtVal = parseFloat(document.getElementById('new-fuel-usd').value);
-    
     if(!amtVal || amtVal <= 0) return alert("Please enter a valid amount.");
 
     fuelEntries.push({ id: Date.now(), loc: editingFuelLoc, date: dateVal, usd: amtVal });
-    localStorage.setItem('holidayFuel_v4.8', JSON.stringify(fuelEntries));
+    localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
     
     document.getElementById('new-fuel-usd').value = '';
     renderLocalFuelList(editingFuelLoc);
@@ -447,8 +439,9 @@ function addLocalFuel() {
 
 function deleteFuelEntry(id) {
     if(confirm("Remove this fuel entry?")) {
+        triggerHaptic('heavy');
         fuelEntries = fuelEntries.filter(e => e.id !== id);
-        localStorage.setItem('holidayFuel_v4.8', JSON.stringify(fuelEntries));
+        localStorage.setItem('holidayFuel_v5.0', JSON.stringify(fuelEntries));
         
         if(editingFuelLoc) {
             renderLocalFuelList(editingFuelLoc);
@@ -482,7 +475,7 @@ function renderGlobalFuelList() {
     } else {
         tbody.innerHTML = fuelEntries.map(e => `
             <tr>
-                <td class="py-3 font-medium text-[10px] leading-tight">${e.date}<br><button onclick="deleteFuelEntry(${e.id})" class="text-rose-500 text-[10px]">Delete</button></td>
+                <td class="py-3 font-medium text-[10px] leading-tight">${e.date}<br><button onclick="triggerHaptic(); deleteFuelEntry(${e.id})" class="text-rose-500 text-[10px]">Delete</button></td>
                 <td class="py-3 font-black text-slate-400 uppercase text-[10px]">${e.loc}</td>
                 <td class="py-3 text-right font-black text-white">$${e.usd}</td>
             </tr>
@@ -493,6 +486,7 @@ function renderGlobalFuelList() {
 }
 
 function openGlobalFuelModal() {
+    triggerHaptic('light');
     editingFuelLoc = null; 
     renderGlobalFuelList();
     toggleGlobalFuelModal(true);
@@ -531,27 +525,32 @@ function saveChanges() {
     tripData[editingIndex].spent = spent;
     tripData[editingIndex].activity = document.getElementById('edit-activity').value;
     
-    localStorage.setItem('holidayBudget_v4.8', JSON.stringify(tripData));
+    localStorage.setItem('holidayBudget_v5.0', JSON.stringify(tripData));
 
+    // VIBE CHECK: Animations and Haptics
     if(spent > usd && usd > 0) {
+        triggerHaptic('error');
         const modalCard = document.getElementById('modal-card');
         modalCard.classList.add('shake-anim');
         setTimeout(() => {
             modalCard.classList.remove('shake-anim');
             toggleModal(false);
-            switchTab(currentTab);
+            switchTab(currentTab, false);
         }, 400);
-    } else if (spent > 0 && spent < usd) {
-        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, zIndex: 100 });
+    } else if (spent > 0 && spent <= usd) {
+        triggerHaptic('success');
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, zIndex: 100, colors: ['#4338ca', '#10b981', '#f59e0b'] });
         toggleModal(false);
-        switchTab(currentTab);
+        switchTab(currentTab, false);
     } else {
+        triggerHaptic('light');
         toggleModal(false);
-        switchTab(currentTab);
+        switchTab(currentTab, false);
     }
 }
 
 function toggleModal(show) {
+    if(!show) triggerHaptic('light');
     const m = document.getElementById('modal');
     if (show) {
         m.classList.remove('opacity-0', 'pointer-events-none');
@@ -564,7 +563,6 @@ function toggleModal(show) {
     }
 }
 
-// Window object assignments for inline HTML handlers
 window.switchTab = switchTab;
 window.openGlobalFuelModal = openGlobalFuelModal;
 window.toggleDarkMode = toggleDarkMode;
@@ -581,6 +579,7 @@ window.addLocalFuel = addLocalFuel;
 window.deleteFuelEntry = deleteFuelEntry;
 window.toggleLocalFuelModal = toggleLocalFuelModal;
 window.toggleGlobalFuelModal = toggleGlobalFuelModal;
+window.triggerHaptic = triggerHaptic;
 
 init();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
