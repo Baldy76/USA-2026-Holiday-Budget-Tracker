@@ -111,7 +111,6 @@ body.dark .nav-wrapper { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba
 .nav-btn { display: flex; flex-direction: column; align-items: center; color: #94a3b8; transition: all 0.3s; padding: 5px 10px; cursor: pointer; }
 .nav-btn.active { color: white; }
 
-/* NEW: The Background Bubble for Active Icons */
 .nav-icon-bg {
     display: flex;
     align-items: center;
@@ -123,7 +122,7 @@ body.dark .nav-wrapper { background: rgba(2, 6, 23, 0.9); border: 1px solid rgba
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .nav-btn.active .nav-icon-bg {
-    background: #4f46e5; /* Indigo-500 */
+    background: #4f46e5; 
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
     transform: translateY(-4px);
 }
