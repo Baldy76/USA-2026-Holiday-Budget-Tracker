@@ -160,6 +160,5 @@ body.dark .modal-input-premium.accent { background: #312e81; color: #a5b4fc; bor
 .safe-bottom { padding-bottom: calc(160px + env(safe-area-inset-bottom)) !important; }
 body.modal-active { overflow: hidden; }
 
-/* Table overrides */
 table th { text-align: left; }
 table tfoot td { border-top-width: 2px; }
